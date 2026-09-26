@@ -2,9 +2,9 @@
 
 A roadmap README names the units of its plan as headings (`### Layer 3: ...`, `## Lane G: ...`,
 `### Part A — ...`, `### Stage 2: ...`, or short labels such as `### L0A — ...`). A status report
-assesses each of them, and `apply` turns that assessment into the `tauceti-coverage:v1` header so a
+assesses each of them, and `apply` turns that assessment into the `epsiloneridani-coverage:v1` header so a
 script can aggregate it across roadmaps. The extraction rule is the consumer's
-(`scripts/roadmap_progress.py` in the TauCeti repository); the schema is `files.require_coverage`.
+(`scripts/roadmap_progress.py` in the EpsilonEridani repository); the schema is `files.require_coverage`.
 
 Pure: text in, values out.
 """
@@ -93,7 +93,7 @@ def split_block(body):
 
 
 def coverage(area, to_sha, readme_hash, layers, entries, child=None):
-    """The validated `tauceti-coverage:v1` payload for a report, or raise.
+    """The validated `epsiloneridani-coverage:v1` payload for a report, or raise.
 
     The model supplied only `entries`; the roadmap, commit and README hash come from the plan, and
     `files.require_coverage` (the gate's validator) decides the shape. What the gate cannot check,

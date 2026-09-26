@@ -1,6 +1,6 @@
 name: tests
 
-# Byte-compile everything and run the plain-script test suites, matching TauCetiReview's minimal CI.
+# Byte-compile everything and run the plain-script test suites, matching EpsilonEridaniReview's minimal CI.
 # There is no test framework and no PyPI dependency: each tests/test_*.py exits non-zero on failure.
 
 on:

@@ -24,7 +24,7 @@ import re
 
 from . import window
 
-LEAN_PREFIX = "TauCeti/"
+LEAN_PREFIX = "EpsilonEridani/"
 LEAN_SUFFIX = ".lean"
 
 # Per-PR caps. A single PR adding hundreds of declarations is real (a big port), but a report does
@@ -52,7 +52,7 @@ def module_page_for_file(path):
 
 
 def changed_lean_files(repo_dir, commits):
-    """Lean files under `TauCeti/` touched by the given commits.
+    """Lean files under `EpsilonEridani/` touched by the given commits.
 
     Scoped to the commits of the pull requests being reported, NOT to the whole window. A window is
     a range of the mainline and carries every roadmap's work; walking all of it meant fetching a

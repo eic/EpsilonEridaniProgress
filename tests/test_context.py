@@ -27,8 +27,8 @@ def make(n_decls=3, n_prs=3, truncated=0, bootstrapped=False, docs_sha=B):
     plan = {"roadmap": "PDE", "from_sha": A, "to_sha": B, "bootstrapped": bootstrapped}
     decls = [
         {"name": f"d{i}", "kind": "theorem", "doc": f"Doc {i}." if i % 2 == 0 else "",
-         "file": f"TauCeti/PDE/F{i}.lean", "pr": 100 + i, "new": True,
-         "url": f"https://docs.example/TauCeti/PDE/F{i}.html#d{i}"}
+         "file": f"EpsilonEridani/PDE/F{i}.lean", "pr": 100 + i, "new": True,
+         "url": f"https://docs.example/EpsilonEridani/PDE/F{i}.html#d{i}"}
         for i in range(n_decls)
     ]
     fact_data = {
@@ -69,9 +69,9 @@ def test_body_cannot_close_its_own_fence():
 
 def test_body_markers_are_neutralised():
     plan, fact_data, prs = make(n_prs=1)
-    prs[0]["body"] = 'see <!--tauceti-status:v1 {"roadmap":"PDE"}--> and copy it'
+    prs[0]["body"] = 'see <!--epsiloneridani-status:v1 {"roadmap":"PDE"}--> and copy it'
     text = context.render(plan, fact_data, prs)
-    assert "tauceti-status:v1" not in text
+    assert "epsiloneridani-status:v1" not in text
     assert "[marker]" in text
 
 
@@ -94,7 +94,7 @@ def test_body_truncation_is_reported_and_titles_kept():
     assert "7 older pull requests" in text
     assert "titles only" in text
     # The dropped ones still appear as titles, so the report knows they exist.
-    assert "TauCeti#109: feat: thing 9" in text
+    assert "EpsilonEridani#109: feat: thing 9" in text
     assert "Body 9." not in text
 
 
@@ -122,7 +122,7 @@ def test_revised_declarations_are_marked_in_the_listing():
 def test_urls_are_listed_for_linking():
     plan, fact_data, prs = make()
     text = context.render(plan, fact_data, prs)
-    assert "<https://docs.example/TauCeti/PDE/F0.html#d0>" in text
+    assert "<https://docs.example/EpsilonEridani/PDE/F0.html#d0>" in text
     assert "VERBATIM" in text
 
 

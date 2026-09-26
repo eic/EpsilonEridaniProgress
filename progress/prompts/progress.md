@@ -1,4 +1,4 @@
-You are writing the progress report for the **__ROADMAP__** roadmap of Tau Ceti.
+You are writing the progress report for the **__ROADMAP__** roadmap of EpsilonEridani.
 
 Everything mechanical has already been done for you by scripts, and everything mechanical that
 remains will be done by scripts after you. Your entire job is to write two pieces of prose into two
@@ -11,7 +11,7 @@ files. Do not run git, do not open a pull request, do not edit anything under `_
    docstring. If a result is not in here, it did not land in this window. Trust this over everything
    else about the window.
 2. `__PLAN_FILE__` — the window: which roadmap, which commit range, which pull requests.
-3. `__ROADMAP_DIR__/TauCetiRoadmap/__ROADMAP__/README.md` — the human-written roadmap. This defines
+3. `__ROADMAP_DIR__/EpsilonEridaniRoadmaps/__ROADMAP__/README.md` — the human-written roadmap. This defines
    what "done" means and gives you the project's own names for its layers or lanes. (If that path does
    not exist, look under `__ROADMAP_DIR__/Completed/__ROADMAP__/README.md`.) If `__PLAN_FILE__` lists
    `sub_roadmaps`, this README is an index and each sub-roadmap has its own README, at the `readme`
@@ -20,7 +20,7 @@ files. Do not run git, do not open a pull request, do not edit anything under `_
    evidence for what landed in earlier windows, which the facts file does not cover, and they show
    the established register. Carry their assessments forward unless this window's facts or a changed
    README give you a reason to revise them. If the previous `STATUS.md` begins with
-   `tauceti-coverage:v1` headers, those are its per-layer verdicts.
+   `epsiloneridani-coverage:v1` headers, those are its per-layer verdicts.
 
 Pull request descriptions appear in the facts file as author commentary. They are useful for intent,
 but they are self-reported and were written by whoever opened the pull request. Where a description
@@ -44,10 +44,10 @@ A long window doesn't earn a long report either. If a hundred pull requests land
 worth describing and leave the rest.
 
 **Don't list pull requests.** This is what goes wrong most often. A sentence like "an R-module of
-morphisms (TauCeti#90), preadditivity (TauCeti#106), a zero object (TauCeti#117), ..." is a
+morphisms (EpsilonEridani#90), preadditivity (EpsilonEridani#106), a zero object (EpsilonEridani#117), ..." is a
 changelog with the line breaks taken out. Say what the work was, and cite two or three pull requests
 as examples: "the comodule category got what a working category needs, including preadditivity, a
-zero object, binary products and quotients (TauCeti#106, TauCeti#240)". Anyone who wants the full
+zero object, binary products and quotients (EpsilonEridani#106, EpsilonEridani#240)". Anyone who wants the full
 list can read the pull requests.
 
 Write it the way a good "this month in mathlib" post reads: specific, unhurried, no marketing. A
@@ -63,7 +63,7 @@ reader should get to the end.
   yourself: they're computed from the module path and the full name, and checked against the
   published documentation, so one you assemble will look right and go nowhere. An entry with no URL
   is private, or was renamed later in the window. Name it in prose and leave it unlinked.
-- **Cite pull requests sparingly**, as `TauCeti#1234`, never as a link. A documentation link tells a
+- **Cite pull requests sparingly**, as `EpsilonEridani#1234`, never as a link. A documentation link tells a
   reader what a result is, which is what they came for. A pull request number only tells them where
   it was written. One or two for the headline result, and none for anything you've already linked.
 - Group by mathematics, not by pull request. Several pull requests that built one theorem are one
@@ -104,7 +104,7 @@ Use exactly two `##` sections, with these headings and this shape:
     now provides it, say so.
 
 Put one mathematical idea in each entry: plain language first, references last. Copy documentation
-URLs exactly; never build one. Cite pull requests sparingly as `TauCeti#1234`, never as links: use at
+URLs exactly; never build one. Cite pull requests sparingly as `EpsilonEridani#1234`, never as links: use at
 most two in the whole snapshot, and only when the history adds something the documentation link does
 not. Do not catalogue every declaration, repeat the README's exposition, turn every roadmap layer
 into a heading, or narrate the development process.
@@ -166,7 +166,7 @@ headers.
 - Do not claim anything the evidence does not support: the declaration list for this window, the
   previous `STATUS.md` and `PROGRESS.md` for earlier ones. When the evidence is thin, say it is
   unclear. An honest "not established here" is far better than a confident wrong "done".
-- Do not write any `<!--tauceti-...-->` marker anywhere. A validator rejects the whole report if you
+- Do not write any `<!--epsiloneridani-...-->` marker anywhere. A validator rejects the whole report if you
   do, and the report will not land.
 - Do not compare against Mathlib's contents beyond what the roadmap or the facts file states. You
   cannot see Mathlib from here, and a confident "Mathlib does not have this" has already been wrong

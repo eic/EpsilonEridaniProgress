@@ -147,7 +147,7 @@ def test_the_rendered_status_round_trips_the_coverage():
     assert files.parse_status(text)["coverage"] == cov
     assert "```coverage" not in text
     lines = text.splitlines()  # the header is the second line, part of the canonical prefix
-    assert lines[0].startswith("<!--tauceti-status:v1 ") and lines[1].startswith("<!--tauceti-coverage:v1 "), lines[:2]
+    assert lines[0].startswith("<!--epsiloneridani-status:v1 ") and lines[1].startswith("<!--epsiloneridani-coverage:v1 "), lines[:2]
     assert lines[2] == "# Status: Widgets"
 
 
@@ -156,9 +156,9 @@ def test_the_rendered_status_round_trips_the_coverage():
 
 H2 = "1" * 64
 SUBS = [
-    {"roadmap": "Rep/Spin", "readme": "TauCetiRoadmap/Rep/Spin/README.md", "readme_sha": H2,
+    {"roadmap": "Rep/Spin", "readme": "EpsilonEridaniRoadmaps/Rep/Spin/README.md", "readme_sha": H2,
      "layers": [{"id": "Layer 0", "title": "Layer 0: a", "line": 3}, {"id": "Layer 1", "title": "Layer 1: b", "line": 4}]},
-    {"roadmap": "Rep/Roots", "readme": "TauCetiRoadmap/Rep/Roots/README.md", "readme_sha": H,
+    {"roadmap": "Rep/Roots", "readme": "EpsilonEridaniRoadmaps/Rep/Roots/README.md", "readme_sha": H,
      "layers": [{"id": "Lane A", "title": "Lane A: c", "line": 3}]},
 ]
 SPIN = [{"id": "Layer 1", "state": "untouched"}, {"id": "Layer 0", "state": "done"}]

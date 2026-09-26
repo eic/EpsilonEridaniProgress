@@ -3,10 +3,10 @@ name: progress-merge
 # Auto-merge generated progress reports (STATUS.md / PROGRESS.md) in this repository.
 #
 # All the validation, and the merge itself, live in a SHA-pinned reusable workflow in
-# TauCetiProgress -- the same discipline TauCeti uses for TauCetiReview, and for the same reason: an
+# EpsilonEridaniProgress -- the same discipline EpsilonEridani uses for EpsilonEridaniReview, and for the same reason: an
 # unpinned `@main` would let an upstream change alter what is allowed to merge here without review.
 # The pin must be bumped deliberately, in step with the `progress_ref` input and with the version the
-# worker runs (see TauCetiProgress' README).
+# worker runs (see EpsilonEridaniProgress' README).
 #
 # `pull_request_target` rather than `pull_request` so the App secrets are available for the events we
 # care about. That is safe here only because the called workflow never checks out or executes pull
@@ -119,7 +119,7 @@ jobs:
   gate:
     needs: resolve
     if: needs.resolve.outputs.pr != ''
-    # Pinned to a full TauCetiProgress SHA. `progress_ref` must be the SAME SHA: it selects the
+    # Pinned to a full EpsilonEridaniProgress SHA. `progress_ref` must be the SAME SHA: it selects the
     # validator code checked out inside, and a mismatch would validate with different rules than the
     # ones reviewed here.
     # `write` here and nowhere else: the called workflow narrows it again to the one job that
@@ -127,17 +127,17 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: TauCetiProject/TauCetiProgress/.github/workflows/merge.yml@REPLACE_WITH_FULL_SHA
+    uses: eic/EpsilonEridaniProgress/.github/workflows/merge.yml@REPLACE_WITH_FULL_SHA
     with:
       pr: ${{ fromJSON(needs.resolve.outputs.pr) }}
       progress_ref: REPLACE_WITH_FULL_SHA
       # There is deliberately no author allowlist. Anyone may publish a progress report, including
       # from a fork: what bounds this is the shape of the diff (two generated files, one roadmap,
       # append-only log, window ending in published history), not who sent it. See
-      # roadmap-workflows/README.md in TauCetiProgress.
+      # roadmap-workflows/README.md in EpsilonEridaniProgress.
       # `tau-ceti-roadmap-sync`, the App this repository's ruleset lists as a bypass actor. It must be
       # this one and not `secrets.APP_ID` (the review bot, which auto-merge.yml uses): the review bot
-      # bypasses TauCeti's ruleset, not this one, so a direct merge with its token would be refused
+      # bypasses EpsilonEridani's ruleset, not this one, so a direct merge with its token would be refused
       # for want of a code-owner review. auto-merge.yml can use it because it only *enables* GitHub's
       # native auto-merge and lets the ruleset gate the merge; this workflow merges directly.
       app_id: ${{ vars.SYNC_BOT_APP_ID }}

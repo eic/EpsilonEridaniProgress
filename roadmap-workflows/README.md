@@ -1,23 +1,23 @@
-# Workflows to install in TauCetiRoadmap
+# Workflows to install in EpsilonEridaniRoadmaps
 
-These two files belong in `TauCetiRoadmap/.github/workflows/`, not here. They live in this repository
+These two files belong in `EpsilonEridaniRoadmaps/.github/workflows/`, not here. They live in this repository
 so they are reviewed alongside the gate they call, and so the pinning discipline is visible in one
 place.
 
-`/.github/` in TauCetiRoadmap is owned by `@TauCetiProject/humans`, so installing them is a
+`/.github/` in EpsilonEridaniRoadmaps is owned by `@eic/humans`, so installing them is a
 deliberate human act.
 
 ## Installing
 
-1. Commit the two workflow files into `TauCetiRoadmap/.github/workflows/`.
-2. Replace every `REPLACE_WITH_FULL_SHA` with the full 40-character SHA of the TauCetiProgress commit
+1. Commit the two workflow files into `EpsilonEridaniRoadmaps/.github/workflows/`.
+2. Replace every `REPLACE_WITH_FULL_SHA` with the full 40-character SHA of the EpsilonEridaniProgress commit
    you are pinning. Each file uses it **twice** — once in `uses:` and once in `progress_ref:` — and
    both must be that same SHA. `uses:` selects the workflow definition; `progress_ref` selects the
    validator code checked out inside it. A mismatch would validate with different rules than the ones
    reviewed.
 3. Add the repository secrets `ZULIP_EMAIL`, `ZULIP_API_KEY`, and optionally `ZULIP_SITE`.
    (`APP_ID` / `APP_PRIVATE_KEY` are already present, used by the existing `auto-merge.yml`.)
-4. Subscribe the Zulip bot to the **Tau Ceti** channel.
+4. Subscribe the Zulip bot to the **EpsilonEridani** channel.
 5. Add the machine-owned declaration to the repository `README.md` — see `readme-snippet.md`.
 
 ## Who may publish
@@ -27,7 +27,7 @@ Anyone. There is no author allowlist, and pull requests opened from forks are ac
 What makes that safe is the shape of the diff rather than the identity behind it. A report may touch
 exactly one roadmap's `STATUS.md` and `PROGRESS.md` and nothing else; the log must grow only at its
 end, byte for byte; the window must continue from the area's current cursor and end at a commit
-actually reachable from TauCeti's `docgen` branch; and the `build` check must have succeeded on the
+actually reachable from EpsilonEridani's `docgen` branch; and the `build` check must have succeeded on the
 exact head being merged. No pull-request content is ever checked out or executed, and no write token
 exists until every check has passed.
 
@@ -55,12 +55,12 @@ after is unattended.
 Ask for one with `--area <Roadmap>`. Automatic selection skips roadmaps that have never been
 reported, so an unbootstrapped one does not generate a report every day only to have it refused.
 
-Operators without push access to TauCetiRoadmap publish from a fork, which `apply` sets up
+Operators without push access to EpsilonEridaniRoadmaps publish from a fork, which `apply` sets up
 automatically. Nothing has to be configured for a new contributor to start producing reports.
 
 ## Keeping versions in step
 
-Three places run TauCetiProgress code, and they must be the same commit:
+Three places run EpsilonEridaniProgress code, and they must be the same commit:
 
 | Where | How it is pinned |
 | --- | --- |
@@ -91,10 +91,10 @@ repository rather than something the workflow can enforce.
 It proves the *shape* of an update: which paths changed, that both generated files are present, that
 the window continues the log with no gap, that `PROGRESS.md` grew only at the end, that no file is a
 symlink, that the head is a `progress/*` branch whose name matches the window it carries, that the
-window ends at a commit reachable from TauCeti's documentation branch, that `build` is green on that
+window ends at a commit reachable from EpsilonEridani's documentation branch, that `build` is green on that
 exact commit, and that the merge is bound to the head that was validated.
 
 It says nothing about *who* opened the pull request, on purpose.
 
 It does **not** prove the prose is true. That limit is accepted deliberately; see the trust-boundary
-section of the TauCetiProgress README.
+section of the EpsilonEridaniProgress README.

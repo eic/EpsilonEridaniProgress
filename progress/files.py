@@ -4,8 +4,8 @@
 `PROGRESS.md` is an append-only log of windows, each section headed by the commit range it covers.
 
 Both carry a machine-readable HTML-comment header followed by prose, following the
-`tauceti-<kind>:v1 {json}` convention the rest of the project already uses for scoreboards and
-target markers. A `STATUS.md` may also carry `tauceti-coverage:v1` headers, the report's verdict
+`epsiloneridani-<kind>:v1 {json}` convention the rest of the project already uses for scoreboards and
+target markers. A `STATUS.md` may also carry `epsiloneridani-coverage:v1` headers, the report's verdict
 on each layer in a form a script can read (README.md, "The coverage header"): one for the area's
 own README, and one for each sub-roadmap of an umbrella area. They have the standing of the prose
 beside them: a model's account, not a checked claim.
@@ -21,16 +21,16 @@ import re
 
 # Marker names are part of the wire format; the gate rejects a model that emits any of them
 # inside its prose, so bumping a version here is a coordinated change with the gate.
-STATUS_MARKER = "tauceti-status:v1"
-PROGRESS_MARKER = "tauceti-progress:v1"
-COVERAGE_MARKER = "tauceti-coverage:v1"
+STATUS_MARKER = "epsiloneridani-status:v1"
+PROGRESS_MARKER = "epsiloneridani-progress:v1"
+COVERAGE_MARKER = "epsiloneridani-coverage:v1"
 
-# Any `tauceti-*:vN` marker at all. Model prose is checked against this, not just against the two
+# Any `epsiloneridani-*:vN` marker at all. Model prose is checked against this, not just against the two
 # markers above: prose that forges a *scoreboard* or *target* marker is equally unwanted, and a
 # file that grows a second status header would confuse every later parse of it.
-RESERVED_MARKER_RE = re.compile(r"<!--\s*tauceti-[a-z-]+:v\d+")
+RESERVED_MARKER_RE = re.compile(r"<!--\s*epsiloneridani-[a-z-]+:v\d+")
 
-_HEADER_RE = re.compile(r"<!--\s*(tauceti-[a-z-]+:v\d+)\s*(\{.*?\})\s*-->", re.S)
+_HEADER_RE = re.compile(r"<!--\s*(epsiloneridani-[a-z-]+:v\d+)\s*(\{.*?\})\s*-->", re.S)
 
 # A short SHA is ambiguous and a 40-hex SHA is not, so the formats store full ones and abbreviate
 # only for display.
@@ -86,7 +86,7 @@ TS_RE = re.compile(r"\A[0-9A-Za-z:.+\- ]{0,40}\Z")
 # without changing this constant too.
 STATUS_DISCLAIMER = (
     "It is generated, and its prose is not security-validated; see\n"
-    "https://github.com/TauCetiProject/TauCetiProgress for what that means."
+    "https://github.com/eic/EpsilonEridaniProgress for what that means."
 )
 
 # Header schemas, closed rather than open. Unknown keys are refused so a future reader cannot be
@@ -212,7 +212,7 @@ def coverage_roadmap(value, area):
 
 
 def require_coverage(obj, area, to_sha, child=None):
-    """A `tauceti-coverage:v1` payload, validated whole, or raise. The one schema, used by the
+    """A `epsiloneridani-coverage:v1` payload, validated whole, or raise. The one schema, used by the
     worker on the model's block and by the gate on a pull request's file.
 
     Closed, like the other headers: the roadmap it names (the area of the status header beside it,
@@ -495,7 +495,7 @@ def strip_one_header(text, marker):
     """Remove exactly ONE well-formed `marker` header from `text`, or raise.
 
     Used before scanning prose for reserved markers. The previous approach exempted anything whose
-    prefix matched an allowed marker name, which let prose carrying `<!--tauceti-progress:v1 junk-->`
+    prefix matched an allowed marker name, which let prose carrying `<!--epsiloneridani-progress:v1 junk-->`
     through untouched -- a string that is not the parsed header at all. Removing the one canonical
     span and then scanning the remainder with NO exemptions is exact.
     """
@@ -508,7 +508,7 @@ def strip_one_header(text, marker):
 
 
 def check_no_reserved_markers(body):
-    """Refuse prose that contains any `tauceti-*:vN` marker.
+    """Refuse prose that contains any `epsiloneridani-*:vN` marker.
 
     A model that emits one could forge a second status header, a fake scoreboard, or a target
     marker, and every later parse of the file would then see something the generator never intended.
@@ -532,7 +532,7 @@ def check_status_shape(text, area, to_sha, ts, coverage=None, sub_coverage=()):
     if not text.startswith(expected):
         # Say which part diverges; the whole prefix is too long to quote usefully.
         for label, probe in (
-            ("its tauceti-status:v1 header", f"<!--{STATUS_MARKER} "),
+            ("its epsiloneridani-status:v1 header", f"<!--{STATUS_MARKER} "),
             (f"its canonical '# Status: {area}' heading", f"# Status: {area}\n"),
             ("the standing 'not security-validated' disclaimer", STATUS_DISCLAIMER),
         ):
@@ -559,7 +559,7 @@ def check_section_shape(added, area, from_sha, to_sha):
     m = pattern.match(added)
     if not m:
         raise FormatError(
-            f"the new section must begin with its tauceti-progress:v1 header followed by a "
+            f"the new section must begin with its epsiloneridani-progress:v1 header followed by a "
             f"'## {area}: ... (`{from_sha[:7]}` to `{to_sha[:7]}`)' heading"
         )
     return added[m.end():]

@@ -1,7 +1,7 @@
 [project]
-name = "tauceti-progress"
+name = "epsiloneridani-progress"
 version = "0.1.0"
-description = "Decide, generate, and publish per-roadmap progress reports for Tau Ceti."
+description = "Decide, generate, and publish per-roadmap progress reports for EpsilonEridani."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -10,7 +10,7 @@ license = { text = "Apache-2.0" }
 dependencies = []
 
 [project.scripts]
-tauceti-progress = "progress.cli:main"
+epsiloneridani-progress = "progress.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

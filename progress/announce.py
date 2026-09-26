@@ -23,7 +23,7 @@ from . import files, zulip
 ID_PREFIX = "progress-log-id:"
 
 MAX_MESSAGE_CHARS = 8000
-ROADMAP_PARENTS = ("TauCetiRoadmap", "Completed")
+ROADMAP_PARENTS = ("EpsilonEridaniRoadmaps", "Completed")
 
 
 def section_id(header):
@@ -42,7 +42,7 @@ def split_section(text):
     headers = files.parse_sections(text)
     if len(headers) != 1:
         raise files.FormatError(f"expected exactly one section, found {len(headers)}")
-    m = re.search(r"<!--tauceti-progress:v1 .*?-->[^\n]*\n", text, flags=re.S)
+    m = re.search(r"<!--epsiloneridani-progress:v1 .*?-->[^\n]*\n", text, flags=re.S)
     if not m:
         raise files.FormatError("no section marker found in the appended text")
     body = text[m.end():]
@@ -51,11 +51,11 @@ def split_section(text):
     return headers[0], body
 
 
-def roadmap_file_url(area, filename, parent="TauCetiRoadmap"):
+def roadmap_file_url(area, filename, parent="EpsilonEridaniRoadmaps"):
     """Canonical main-branch URL for a generated roadmap file."""
     if parent not in ROADMAP_PARENTS:
         raise ValueError(f"unexpected roadmap parent: {parent}")
-    return f"https://github.com/TauCetiProject/TauCetiRoadmap/blob/main/{parent}/{area}/{filename}"
+    return f"https://github.com/eic/EpsilonEridaniRoadmaps/blob/main/{parent}/{area}/{filename}"
 
 
 def unwrap_prose(prose):
@@ -72,10 +72,10 @@ def unwrap_prose(prose):
     )
 
 
-def render_message(header, prose, roadmap_url=None, status_url=None, roadmap_parent="TauCetiRoadmap"):
+def render_message(header, prose, roadmap_url=None, status_url=None, roadmap_parent="EpsilonEridaniRoadmaps"):
     """The Zulip message for one section.
 
-    Shape follows the review Kim gave Chris's bot: `TauCeti#NNN` linkifiers rather than markdown
+    Shape follows the review Kim gave Chris's bot: `EpsilonEridani#NNN` linkifiers rather than markdown
     links, no claims about what Mathlib does or does not have, and no hidden trailing tag (Zulip
     renders none, so the id is visible).
     """
@@ -108,7 +108,7 @@ def already_posted(client, channel, topic, sid):
     return None
 
 
-def run(section_file, channel=None, topic=None, roadmap_parent="TauCetiRoadmap", dry_run=False):
+def run(section_file, channel=None, topic=None, roadmap_parent="EpsilonEridaniRoadmaps", dry_run=False):
     """Post the section in `section_file`. Returns a process exit code.
 
     Raises on a transient failure rather than swallowing it, so the workflow run goes red and a

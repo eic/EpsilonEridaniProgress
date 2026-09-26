@@ -1,6 +1,6 @@
 """A minimal Zulip REST client: authenticate, search a topic, post, edit.
 
-Adapted from `TauCeti/scripts/pr_status/zulip.py`, which is stdlib-only for the same reason this is
+Adapted from `EpsilonEridani/scripts/pr_status/zulip.py`, which is stdlib-only for the same reason this is
 -- the whole toolchain runs with no PyPI dependencies. That file could not simply be imported: it
 lives in another repository, under a human-owned `scripts/` directory. The duplication is about
 ninety lines and is deliberate; the emoji-reconciliation machinery it carries is not reproduced.
@@ -26,7 +26,7 @@ import urllib.parse
 import urllib.request
 
 DEFAULT_SITE = "https://leanprover.zulipchat.com"
-DEFAULT_CHANNEL = "Tau Ceti"
+DEFAULT_CHANNEL = "EpsilonEridani"
 DEFAULT_TOPIC = "Progress logs"
 
 ZWSP = "​"  # zero-width space, used to defuse mentions and linkifiers
@@ -50,7 +50,7 @@ def sanitize(text):
       into a link to some unrelated mathlib PR.
 
     Two things are deliberately *not* touched. A `#` preceded by an alphanumeric is a qualified
-    linkifier -- `TauCeti#966`, `mathlib4#33505` -- which is exactly the form Kim asked for in place
+    linkifier -- `EpsilonEridani#966`, `mathlib4#33505` -- which is exactly the form Kim asked for in place
     of markdown links, in any case. And a `#` not followed by a digit is a heading or ordinary
     punctuation, so defusing it would only corrupt the prose.
 

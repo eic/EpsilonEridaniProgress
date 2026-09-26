@@ -33,7 +33,7 @@ def run(*argv):
 
 def test_the_progress_prompt_prints():
     rc, out = run("prompt", "progress")
-    assert rc == 0 and "roadmap of Tau Ceti" in out
+    assert rc == 0 and "roadmap of EpsilonEridani" in out
 
 
 def test_the_status_prompt_prints():
@@ -60,7 +60,7 @@ def test_prompts_live_inside_the_package():
 def test_generated_package_artifacts_are_not_tracked():
     """A tracked ``build/lib`` can silently override newer source when setuptools builds a wheel."""
     tracked = subprocess.run(
-        ["git", "ls-files", "build", "tauceti_progress.egg-info"],
+        ["git", "ls-files", "build", "epsiloneridani_progress.egg-info"],
         cwd=ROOT,
         check=True,
         capture_output=True,

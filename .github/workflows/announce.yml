@@ -11,7 +11,7 @@ name: progress-announce
 #     searches the topic for that id first). A failed announcement can be re-run safely, and a
 #     re-triggered workflow cannot double-post.
 #
-# It fails loudly on a transient error, unlike the PR-reaction mirror in TauCeti which correctly
+# It fails loudly on a transient error, unlike the PR-reaction mirror in EpsilonEridani which correctly
 # exits 0 because a later reconcile heals it. There is no later reconcile here, so a swallowed error
 # would mean an announcement lost for good.
 
@@ -19,12 +19,12 @@ on:
   workflow_call:
     inputs:
       progress_ref:
-        description: The TauCetiProgress ref to run (must equal the `uses:` SHA).
+        description: The EpsilonEridaniProgress ref to run (must equal the `uses:` SHA).
         required: true
         type: string
       channel:
         required: false
-        default: Tau Ceti
+        default: EpsilonEridani
         type: string
       topic:
         required: false
@@ -57,7 +57,7 @@ jobs:
       - name: Check out the announcer
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: TauCetiProject/TauCetiProgress
+          repository: eic/EpsilonEridaniProgress
           ref: ${{ inputs.progress_ref }}
           path: announcer
           persist-credentials: false

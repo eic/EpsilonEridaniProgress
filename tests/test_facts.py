@@ -79,19 +79,19 @@ class FakeDocs:
         return out
 
 
-ALPHA = """namespace TauCeti
+ALPHA = """namespace EpsilonEridani
 /-- **Alpha's theorem.** It states alpha. And more besides. -/
 theorem alpha : True := trivial
-end TauCeti
+end EpsilonEridani
 """
 
-ALPHA_AND_BETA = """namespace TauCeti
+ALPHA_AND_BETA = """namespace EpsilonEridani
 /-- **Alpha's theorem.** It states alpha. And more besides. -/
 theorem alpha : True := trivial
 
 /-- **Beta's theorem.** It states beta. -/
 theorem beta : True := trivial
-end TauCeti
+end EpsilonEridani
 """
 
 
@@ -99,19 +99,19 @@ def repo_with_two_prs(tmp):
     """Root, then a PR adding `alpha`, then a PR adding `beta` to the same file."""
     subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
     root = commit(tmp, "init", {"README.md": "x"})
-    first = commit(tmp, "feat: alpha (#101)", {"TauCeti/A.lean": ALPHA})
-    second = commit(tmp, "feat: beta (#102)", {"TauCeti/A.lean": ALPHA_AND_BETA})
+    first = commit(tmp, "feat: alpha (#101)", {"EpsilonEridani/A.lean": ALPHA})
+    second = commit(tmp, "feat: beta (#102)", {"EpsilonEridani/A.lean": ALPHA_AND_BETA})
     return root, first, second
 
 
 # `alpha` occupies lines 2-3 in both versions; `beta` occupies lines 5-6 of the second.
-PAGE = "TauCeti/A.html"
+PAGE = "EpsilonEridani/A.html"
 
 
 def docs_for(commit_sha, with_beta=True):
-    decls = {"TauCeti.alpha": ("theorem", "TauCeti/A.lean", 2, 3)}
+    decls = {"EpsilonEridani.alpha": ("theorem", "EpsilonEridani/A.lean", 2, 3)}
     if with_beta:
-        decls["TauCeti.beta"] = ("theorem", "TauCeti/A.lean", 5, 6)
+        decls["EpsilonEridani.beta"] = ("theorem", "EpsilonEridani/A.lean", 5, 6)
     return FakeDocs({PAGE: decls}, commit_sha)
 
 
@@ -122,9 +122,9 @@ def test_names_kinds_and_urls_come_from_the_documentation():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, root, second, docs=docs_for(second))
         by = {d["name"]: d for d in got["declarations"]}
-        assert set(by) == {"TauCeti.alpha", "TauCeti.beta"}, sorted(by)
-        assert by["TauCeti.alpha"]["kind"] == "theorem"
-        assert by["TauCeti.alpha"]["url"] == "https://docs.example/docs/TauCeti/A.html#TauCeti.alpha"
+        assert set(by) == {"EpsilonEridani.alpha", "EpsilonEridani.beta"}, sorted(by)
+        assert by["EpsilonEridani.alpha"]["kind"] == "theorem"
+        assert by["EpsilonEridani.alpha"]["url"] == "https://docs.example/docs/EpsilonEridani/A.html#EpsilonEridani.alpha"
 
 
 def test_blame_attributes_each_declaration_to_its_pull_request():
@@ -132,8 +132,8 @@ def test_blame_attributes_each_declaration_to_its_pull_request():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, root, second, docs=docs_for(second))
         by = {d["name"]: d for d in got["declarations"]}
-        assert by["TauCeti.alpha"]["pr"] == 101, by["TauCeti.alpha"]
-        assert by["TauCeti.beta"]["pr"] == 102, by["TauCeti.beta"]
+        assert by["EpsilonEridani.alpha"]["pr"] == 101, by["EpsilonEridani.alpha"]
+        assert by["EpsilonEridani.beta"]["pr"] == 102, by["EpsilonEridani.beta"]
 
 
 def test_declarations_predating_the_window_are_not_reported():
@@ -142,7 +142,7 @@ def test_declarations_predating_the_window_are_not_reported():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, first, second, docs=docs_for(second))
         names = {d["name"] for d in got["declarations"]}
-        assert names == {"TauCeti.beta"}, sorted(names)
+        assert names == {"EpsilonEridani.beta"}, sorted(names)
 
 
 def test_the_pr_filter_is_honoured():
@@ -150,7 +150,7 @@ def test_the_pr_filter_is_honoured():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, root, second, pr_numbers=[101], docs=docs_for(second))
         names = {d["name"] for d in got["declarations"]}
-        assert names == {"TauCeti.alpha"}, sorted(names)
+        assert names == {"EpsilonEridani.alpha"}, sorted(names)
 
 
 def test_docstrings_are_read_from_a_known_line():
@@ -160,16 +160,16 @@ def test_docstrings_are_read_from_a_known_line():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, root, second, docs=docs_for(second))
         by = {d["name"]: d for d in got["declarations"]}
-        assert by["TauCeti.alpha"]["doc"] == "**Alpha's theorem.** It states alpha.", by
-        assert by["TauCeti.beta"]["doc"] == "**Beta's theorem.** It states beta."
+        assert by["EpsilonEridani.alpha"]["doc"] == "**Alpha's theorem.** It states alpha.", by
+        assert by["EpsilonEridani.beta"]["doc"] == "**Beta's theorem.** It states beta."
 
 
 def test_a_declaration_with_no_docstring_reports_none():
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
         root = commit(tmp, "init", {"README.md": "x"})
-        head = commit(tmp, "feat: bare (#7)", {"TauCeti/A.lean": "theorem bare : True := trivial\n"})
-        docs = FakeDocs({PAGE: {"bare": ("theorem", "TauCeti/A.lean", 1, 1)}}, head)
+        head = commit(tmp, "feat: bare (#7)", {"EpsilonEridani/A.lean": "theorem bare : True := trivial\n"})
+        docs = FakeDocs({PAGE: {"bare": ("theorem", "EpsilonEridani/A.lean", 1, 1)}}, head)
         got = facts.collect(tmp, root, head, docs=docs)
         assert got["declarations"][0]["doc"] == ""
 
@@ -191,10 +191,10 @@ def test_revised_declarations_are_marked_not_new():
         subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
         root = commit(tmp, "init", {"README.md": "x"})
         before = "/-- Doc. -/\ntheorem t : True := by\n  trivial\n"
-        first = commit(tmp, "feat: add (#1)", {"TauCeti/A.lean": before})
+        first = commit(tmp, "feat: add (#1)", {"EpsilonEridani/A.lean": before})
         after = "/-- Doc. -/\ntheorem t : True := by\n  exact trivial\n"
-        second = commit(tmp, "refactor: tweak (#2)", {"TauCeti/A.lean": after})
-        docs = FakeDocs({PAGE: {"t": ("theorem", "TauCeti/A.lean", 2, 3)}}, second)
+        second = commit(tmp, "refactor: tweak (#2)", {"EpsilonEridani/A.lean": after})
+        docs = FakeDocs({PAGE: {"t": ("theorem", "EpsilonEridani/A.lean", 2, 3)}}, second)
         got = facts.collect(tmp, root, second, docs=docs)
         assert got["declarations"][0]["new"] is True, "written entirely within the window"
         got2 = facts.collect(tmp, first, second, docs=docs)
@@ -206,13 +206,13 @@ def test_documentation_behind_the_window_end_anchors_to_the_documented_commit():
     would produce dead links for anything newer, so the documented commit wins and is reported."""
     with tempfile.TemporaryDirectory() as tmp:
         root, first, second = repo_with_two_prs(tmp)
-        third = commit(tmp, "feat: later (#103)", {"TauCeti/B.lean": "theorem later : True := trivial\n"})
+        third = commit(tmp, "feat: later (#103)", {"EpsilonEridani/B.lean": "theorem later : True := trivial\n"})
         # The documentation is still at `second`.
         got = facts.collect(tmp, root, third, docs=docs_for(second))
         assert got["docs_sha"] == second
         assert got["to_sha"] == third
         names = {d["name"] for d in got["declarations"]}
-        assert names == {"TauCeti.alpha", "TauCeti.beta"}, sorted(names)
+        assert names == {"EpsilonEridani.alpha", "EpsilonEridani.beta"}, sorted(names)
 
 
 def test_documentation_from_a_foreign_history_is_refused():
@@ -227,10 +227,10 @@ def test_documentation_from_a_foreign_history_is_refused():
 
 
 def test_module_page_for_file():
-    assert facts.module_page_for_file("TauCeti/Analysis/Fredholm/Basic.lean") == \
-        "TauCeti/Analysis/Fredholm/Basic.html"
+    assert facts.module_page_for_file("EpsilonEridani/Analysis/Fredholm/Basic.lean") == \
+        "EpsilonEridani/Analysis/Fredholm/Basic.html"
     assert facts.module_page_for_file("scripts/x.py") is None
-    assert facts.module_page_for_file("TauCeti/A.txt") is None
+    assert facts.module_page_for_file("EpsilonEridani/A.txt") is None
 
 
 def test_cli_facts_passes_the_plan_filter():
@@ -254,7 +254,7 @@ def test_cli_facts_passes_the_plan_filter():
         assert rc == 0, rc
         got = json.loads(out_file.read_text())
         names = {d["name"] for d in got["declarations"]}
-        assert names == {"TauCeti.alpha"}, f"filter dropped: got {sorted(names)}"
+        assert names == {"EpsilonEridani.alpha"}, f"filter dropped: got {sorted(names)}"
 
 
 for _name, _fn in sorted(globals().items()):

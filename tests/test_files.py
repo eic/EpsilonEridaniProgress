@@ -199,7 +199,7 @@ def test_rejects_bad_shas_and_areas():
 
 
 def test_parse_rejects_malformed_json_and_duplicates():
-    raises(lambda: files.parse_headers("<!--tauceti-status:v1 {nope}-->", files.STATUS_MARKER),
+    raises(lambda: files.parse_headers("<!--epsiloneridani-status:v1 {nope}-->", files.STATUS_MARKER),
            "malformed")
     two = files.render_status("PDE", A, "t", "x") + files.render_status("PDE", B, "t", "y")
     raises(lambda: files.parse_status(two), "exactly one")
@@ -229,10 +229,10 @@ def test_append_only_rejects_no_change_and_truncation():
 
 
 def test_reserved_markers_rejected_in_prose():
-    raises(lambda: files.check_no_reserved_markers("text <!--tauceti-scoreboard:v1 {}--> more"),
+    raises(lambda: files.check_no_reserved_markers("text <!--epsiloneridani-scoreboard:v1 {}--> more"),
            "reserved marker")
     # A forged *target* marker matters too: housekeeping dedups PRs on it.
-    raises(lambda: files.check_no_reserved_markers('<!--tauceti-target:v1 {"focus":"x"}-->'),
+    raises(lambda: files.check_no_reserved_markers('<!--epsiloneridani-target:v1 {"focus":"x"}-->'),
            "reserved marker")
     # The one canonical header is removed by the caller before scanning; what remains is clean.
     section = files.render_section("PDE", A, B, [1], "w", "clean")
@@ -241,12 +241,12 @@ def test_reserved_markers_rejected_in_prose():
 
 def test_strip_one_header_is_exact():
     """The old exemption allowed anything sharing an allowed marker's PREFIX, so prose carrying
-    `<!--tauceti-progress:v1 junk-->` -- which is not the parsed header -- passed untouched."""
+    `<!--epsiloneridani-progress:v1 junk-->` -- which is not the parsed header -- passed untouched."""
     section = files.render_section("PDE", A, B, [1], "w", "clean")
     stripped = files.strip_one_header(section, files.PROGRESS_MARKER)
-    assert "tauceti-progress:v1" not in stripped, stripped
+    assert "epsiloneridani-progress:v1" not in stripped, stripped
     # A second, malformed marker in the prose survives stripping and is then caught.
-    evil = files.render_section("PDE", A, B, [1], "w", "text <!--tauceti-progress:v1 junk -->")
+    evil = files.render_section("PDE", A, B, [1], "w", "text <!--epsiloneridani-progress:v1 junk -->")
     raises(lambda: files.check_no_reserved_markers(
         files.strip_one_header(evil, files.PROGRESS_MARKER)), "reserved marker")
 
@@ -337,7 +337,7 @@ def test_validate_rejects_unadvanced_status():
 def test_validate_rejects_injected_marker_in_prose():
     area = "PDE"
     log = files.new_progress_file(area)
-    evil = PROSE + ' <!--tauceti-target:v1 {"focus":"PDE","id":"x"}-->'
+    evil = PROSE + ' <!--epsiloneridani-target:v1 {"focus":"PDE","id":"x"}-->'
     new_log = log + files.render_section(area, A, B, [1], "w", evil)
     status = files.render_status(area, B, "t", "s")
     raises(lambda: files.validate_update(area, None, status, log, new_log), "reserved marker")

@@ -26,7 +26,7 @@ def check(name, fn):
         print(f"ok   {name}")
 
 
-OURS = "TauCetiProject"
+OURS = "eic"
 OWNERS = {OURS}
 CURSOR = "37aec57229a4a5828884027165b25804aac01ac8"
 

@@ -2,7 +2,7 @@
 
 This is the security-critical module of the project, so it is worth being explicit about why.
 
-TauCetiRoadmap's `main` ruleset requires an approving review from a code owner plus the `build`
+EpsilonEridaniRoadmaps's `main` ruleset requires an approving review from a code owner plus the `build`
 check. A ruleset cannot scope that requirement to a path, so the only way a generated report can land
 unattended is the roadmap App's `always` bypass -- and a bypass actor bypasses the *whole* ruleset,
 including the status checks. Anyone may open a pull request against that repository, including from a
@@ -43,14 +43,14 @@ BRANCH_RE = re.compile(r"\Aprogress/([0-9a-f]{7})-([0-9a-f]{7})/([A-Za-z0-9]+)\Z
 # group 3 the basename. The parent is captured because an area name can legitimately exist under
 # BOTH parents -- `Completed/` is where a finished roadmap is archived -- so matching on the area and
 # basename alone would let one update write to two directories at once.
-PATH_RE = re.compile(r"\A(TauCetiRoadmap|Completed)/([A-Za-z0-9]+)/(STATUS\.md|PROGRESS\.md)\Z")
+PATH_RE = re.compile(r"\A(EpsilonEridaniRoadmaps|Completed)/([A-Za-z0-9]+)/(STATUS\.md|PROGRESS\.md)\Z")
 
 # A blob mode other than a regular file means a symlink (120000), a gitlink/submodule (160000), or
 # an executable. A symlink named STATUS.md pointing at something else is the classic way to make a
 # path-restricted gate write outside its restriction, so modes are checked, not assumed.
 REGULAR_MODES = {"100644"}
 
-# The App permitted to report the required check. `build` in TauCetiRoadmap is a GitHub Actions
+# The App permitted to report the required check. `build` in EpsilonEridaniRoadmaps is a GitHub Actions
 # check-run (app id 15368); any repository WRITER can POST a commit status or create a check-run
 # under an arbitrary name, so an unauthenticated "something called build says success" is not
 # evidence. Legacy commit statuses are not accepted here at all -- the roadmap repo publishes none.
@@ -131,7 +131,7 @@ def check_files(changed_files, area):
     section, no later run could reconstruct the gap. "Either file" is unsafe; "both files" is not.
 
     Requiring exactly *two* files in *one* parent is equally deliberate, and was a real hole: keying
-    only on the basename let a pull request change four paths -- `TauCetiRoadmap/<area>/{STATUS,
+    only on the basename let a pull request change four paths -- `EpsilonEridaniRoadmaps/<area>/{STATUS,
     PROGRESS}.md` **and** `Completed/<area>/{STATUS,PROGRESS}.md` -- and pass, because both basenames
     were present and every path matched the pattern. The content validators then inspected only one
     pair, so the other two would have merged unexamined.
@@ -180,7 +180,7 @@ def check_modes(tree_entries, required_paths):
     """Every changed blob must be an ordinary file: no symlink, submodule, or mode flip.
 
     `tree_entries` is `[{path, mode, type}]` read from the git TREE api at the head commit, which
-    reports true modes (`100644`, `100755`, `120000`, `160000`). The TauCeti build workflow rejects
+    reports true modes (`100644`, `100755`, `120000`, `160000`). The EpsilonEridani build workflow rejects
     symlinks for the same reason.
 
     `required_paths` must be supplied and every one of them must have an entry. Iterating only over
@@ -244,7 +244,7 @@ def check_up_to_date(compare_status, behind_by, head_sha, main_sha):
 
 
 def check_window(code_window, section):
-    """The reported window must be a real stretch of TauCeti history that moves forward.
+    """The reported window must be a real stretch of EpsilonEridani history that moves forward.
 
     This is the check that makes "anyone may publish" bounded rather than merely revertible, and it
     replaces the anti-abuse role an author allowlist was quietly playing.
@@ -262,7 +262,7 @@ def check_window(code_window, section):
     correct when the round started, throwing away the model's work over a race.
     """
     if not code_window:
-        _refuse("the reported window could not be checked against TauCeti history")
+        _refuse("the reported window could not be checked against EpsilonEridani history")
     checked = code_window.get("to_sha") or ""
     if checked != section["to_sha"]:
         # The window was resolved from the same pinned blob the section was parsed from, so this can
@@ -278,7 +278,7 @@ def check_window(code_window, section):
         )
     if code_window.get("to_reachable") is not True:
         _refuse(
-            f"to_sha {section['to_sha'][:7]} is not a commit reachable from TauCeti's "
+            f"to_sha {section['to_sha'][:7]} is not a commit reachable from EpsilonEridani's "
             f"{code_window.get('ref', 'docgen')} branch, so it names no published history"
         )
     # `is not True`, never `is False`: a missing or null field would otherwise pass. The collector
@@ -296,7 +296,7 @@ def check_area_exists(area_exists, parent, area):
 
     Without this the rate limit below is trivially escaped. It is keyed on the area, and a report for
     an area with no predecessor is always allowed, so an actor who can invent area names can invent
-    unlimited first reports: `TauCetiRoadmap/Bogus1/`, `Bogus2/`, and so on, each creating a new
+    unlimited first reports: `EpsilonEridaniRoadmaps/Bogus1/`, `Bogus2/`, and so on, each creating a new
     directory of two files and each announcing itself. Requiring the directory to already hold a
     `README.md` on the base branch pins reports to roadmaps humans actually created -- the same rule
     that defines an area everywhere else in this tool.
@@ -346,7 +346,7 @@ def check_build(check_runs, head_sha, required="build", app_id=GITHUB_ACTIONS_AP
     """The `build` check must be a completed success, from the expected App, on the exact head.
 
     The merging App bypasses required status checks, so this is asserted rather than relied upon --
-    the same reasoning as `decide_merge` in TauCetiReview.
+    the same reasoning as `decide_merge` in EpsilonEridaniReview.
 
     Three things this is strict about, each a way the looser version could be fooled:
 
@@ -387,7 +387,7 @@ def check_build(check_runs, head_sha, required="build", app_id=GITHUB_ACTIONS_AP
 def check_baseline_paths(old_paths, parent, area):
     """The append-only baseline must come from the directory the diff actually touches.
 
-    An area can exist under both `TauCetiRoadmap/` and `Completed/`. A collector that probed a fixed
+    An area can exist under both `EpsilonEridaniRoadmaps/` and `Completed/`. A collector that probed a fixed
     order would hand a `Completed/` update the ACTIVE log as its baseline, and a wholesale
     replacement of the archived log would then look like a valid append. The paths the baseline was
     read from are therefore recorded and checked here rather than trusted.

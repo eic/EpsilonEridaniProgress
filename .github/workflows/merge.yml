@@ -2,10 +2,10 @@ name: progress-merge
 
 # Validate a generated progress pull request and, only if every check passes, merge it.
 #
-# Called by TauCetiRoadmap's own `progress-merge.yml`, pinned to a full SHA of this repository (the
-# same discipline TauCeti uses when it calls TauCetiReview's reusable workflows).
+# Called by EpsilonEridaniRoadmaps's own `progress-merge.yml`, pinned to a full SHA of this repository (the
+# same discipline EpsilonEridani uses when it calls EpsilonEridaniReview's reusable workflows).
 #
-# WHY THIS IS THE WHOLE GATE. TauCetiRoadmap's `main` ruleset requires a code-owner approval plus
+# WHY THIS IS THE WHOLE GATE. EpsilonEridaniRoadmaps's `main` ruleset requires a code-owner approval plus
 # the `build` check, and a ruleset cannot scope that to a path. So the only way a generated report
 # lands unattended is the roadmap App's `always` bypass -- and a bypass actor bypasses the entire
 # ruleset, status checks included. Anyone may open a pull request there, including from a fork.
@@ -34,16 +34,16 @@ on:
         required: true
         type: number
       progress_ref:
-        description: The TauCetiProgress ref to validate with (must equal the `uses:` SHA).
+        description: The EpsilonEridaniProgress ref to validate with (must equal the `uses:` SHA).
         required: true
         type: string
       app_id:
         description: >
           Numeric id of the App whose token performs the merge. It MUST be an App that the target
           repository's ruleset lists as a bypass actor, or the merge is refused for want of a
-          code-owner review. For TauCetiRoadmap that is `tau-ceti-roadmap-sync`
+          code-owner review. For EpsilonEridaniRoadmaps that is `epsilon-eridani-roadmap-sync`
           (`vars.SYNC_BOT_APP_ID`), NOT the review bot in `APP_ID`, which is a bypass actor on
-          TauCeti but not here. An App id is not a secret, hence an input.
+          EpsilonEridani but not here. An App id is not a secret, hence an input.
         required: true
         type: string
       dry_run:
@@ -99,7 +99,7 @@ jobs:
       - name: Check out the validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          repository: TauCetiProject/TauCetiProgress
+          repository: eic/EpsilonEridaniProgress
           ref: ${{ inputs.progress_ref }}
           path: validator
           persist-credentials: false
@@ -189,7 +189,7 @@ jobs:
           app-id: ${{ inputs.app_id }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name || 'TauCetiRoadmap' }}
+          repositories: ${{ github.event.repository.name || 'EpsilonEridaniRoadmaps' }}
           permission-pull-requests: write
           permission-contents: write
 

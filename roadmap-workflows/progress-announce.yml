@@ -1,6 +1,6 @@
 name: progress-announce
 
-# Announce a newly-merged progress section in Zulip (Tau Ceti > Progress logs).
+# Announce a newly-merged progress section in Zulip (EpsilonEridani > Progress logs).
 #
 # Triggered by the push to `main` rather than chained onto the merge job, so that the App token that
 # can write here and the Zulip credentials never share a job, and so a failed announcement can be
@@ -14,7 +14,7 @@ on:
       # Exactly where a generated report can land: one area directory under either parent. `**` would
       # match across slashes, so a nested or root-level PROGRESS.md written by hand would trigger an
       # announcement attempt for something the gate would never have accepted.
-      - 'TauCetiRoadmap/*/PROGRESS.md'
+      - 'EpsilonEridaniRoadmaps/*/PROGRESS.md'
       - 'Completed/*/PROGRESS.md'
   workflow_dispatch:
 
@@ -24,10 +24,10 @@ permissions:
 jobs:
   announce:
     # Same full SHA as progress-merge.yml uses; bump both together.
-    uses: TauCetiProject/TauCetiProgress/.github/workflows/announce.yml@REPLACE_WITH_FULL_SHA
+    uses: eic/EpsilonEridaniProgress/.github/workflows/announce.yml@REPLACE_WITH_FULL_SHA
     with:
       progress_ref: REPLACE_WITH_FULL_SHA
-      channel: Tau Ceti
+      channel: EpsilonEridani
       topic: Progress logs
     secrets:
       ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}

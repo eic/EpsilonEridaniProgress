@@ -44,7 +44,7 @@ def raises(exc_type, fn, needle=None):
 
 def test_pr_number_of_subject():
     assert window.pr_number_of_subject("feat: add products (#1433)") == 1433
-    assert window.pr_number_of_subject("Merge pull request #62 from TauCetiProject/x") == 62
+    assert window.pr_number_of_subject("Merge pull request #62 from eic/x") == 62
     assert window.pr_number_of_subject("chore: no number here") is None
     # A number in the middle is not a merge marker; only the trailing form counts.
     assert window.pr_number_of_subject("fix: handle (#12) in parser") is None
@@ -170,27 +170,27 @@ def test_discover_areas_matches_canonical_rule():
     with tempfile.TemporaryDirectory() as tmp:
         root = pathlib.Path(tmp)
         for rel in [
-            "TauCetiRoadmap/PDE",
-            "TauCetiRoadmap/ContourIntegration",
-            "TauCetiRoadmap/OneParameterSemigroups",     # README only, no Suggested.lean
-            "TauCetiRoadmap/RepresentationTheory",
-            "TauCetiRoadmap/RepresentationTheory/RootSystems",   # nested: not a top-level area
-            "TauCetiRoadmap/GeometricTopology",
-            "TauCetiRoadmap/GeometricTopology/references",       # has a README but is not an area
+            "EpsilonEridaniRoadmaps/PDE",
+            "EpsilonEridaniRoadmaps/ContourIntegration",
+            "EpsilonEridaniRoadmaps/OneParameterSemigroups",     # README only, no Suggested.lean
+            "EpsilonEridaniRoadmaps/RepresentationTheory",
+            "EpsilonEridaniRoadmaps/RepresentationTheory/RootSystems",   # nested: not a top-level area
+            "EpsilonEridaniRoadmaps/GeometricTopology",
+            "EpsilonEridaniRoadmaps/GeometricTopology/references",       # has a README but is not an area
             "Completed/EffectiveBounds",
         ]:
             (root / rel).mkdir(parents=True)
             (root / rel / "README.md").write_text("#")
-        (root / "TauCetiRoadmap/PDE/Suggested.lean").write_text("-- x")
+        (root / "EpsilonEridaniRoadmaps/PDE/Suggested.lean").write_text("-- x")
         # A directory with no README is not an area.
-        (root / "TauCetiRoadmap/NotAnArea").mkdir()
+        (root / "EpsilonEridaniRoadmaps/NotAnArea").mkdir()
 
         areas = plan.discover_areas(root)
         assert set(areas) == {
             "PDE", "ContourIntegration", "OneParameterSemigroups", "RepresentationTheory",
             "GeometricTopology", "EffectiveBounds",
         }, sorted(areas)
-        assert areas["PDE"] == "TauCetiRoadmap/PDE"
+        assert areas["PDE"] == "EpsilonEridaniRoadmaps/PDE"
         assert areas["EffectiveBounds"] == "Completed/EffectiveBounds"
         assert "RootSystems" not in areas, "nested sub-roadmaps are not separate labelled areas"
         assert "references" not in areas
@@ -199,11 +199,11 @@ def test_discover_areas_matches_canonical_rule():
 def test_read_area_files_missing_is_none():
     with tempfile.TemporaryDirectory() as tmp:
         root = pathlib.Path(tmp)
-        (root / "TauCetiRoadmap/PDE").mkdir(parents=True)
-        s, p = plan.read_area_files(root, "TauCetiRoadmap/PDE")
+        (root / "EpsilonEridaniRoadmaps/PDE").mkdir(parents=True)
+        s, p = plan.read_area_files(root, "EpsilonEridaniRoadmaps/PDE")
         assert s is None and p is None
-        (root / "TauCetiRoadmap/PDE/PROGRESS.md").write_text("hi")
-        s, p = plan.read_area_files(root, "TauCetiRoadmap/PDE")
+        (root / "EpsilonEridaniRoadmaps/PDE/PROGRESS.md").write_text("hi")
+        s, p = plan.read_area_files(root, "EpsilonEridaniRoadmaps/PDE")
         assert s is None and p == "hi"
 
 
@@ -351,9 +351,9 @@ def test_a_labelled_pr_merged_after_the_tip_is_not_flagged():
 
 
 def make_roadmap(root, areas):
-    """A roadmap checkout: `{area: progress_text_or_None}` under `TauCetiRoadmap/`."""
+    """A roadmap checkout: `{area: progress_text_or_None}` under `EpsilonEridaniRoadmaps/`."""
     for area, progress_text in areas.items():
-        d = pathlib.Path(root) / "TauCetiRoadmap" / area
+        d = pathlib.Path(root) / "EpsilonEridaniRoadmaps" / area
         d.mkdir(parents=True)
         (d / "README.md").write_text(f"# {area}\n", encoding="utf-8")
         if progress_text is not None:
@@ -450,7 +450,7 @@ def test_the_plan_records_the_selected_areas_layers_and_readme_hash_exactly():
         make_roadmap(roadmap, {"Curves": None})
         readme = ("# Curves\n\n## Layers\n\n### Layer 0: the group law (Silverman III.2)\ntext\n"
                   "### Layer 1: isogenies — the dual\n")
-        (pathlib.Path(roadmap) / "TauCetiRoadmap" / "Curves" / "README.md").write_text(readme, encoding="utf-8")
+        (pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "README.md").write_text(readme, encoding="utf-8")
         got = plan_against(code, roadmap, shas[2], {"Curves": [1, 2]})
         assert got["layers"] == [{"id": "Layer 0", "title": "Layer 0: the group law", "line": 5},
                                  {"id": "Layer 1", "title": "Layer 1: isogenies — the dual", "line": 7}], got["layers"]
@@ -466,7 +466,7 @@ def test_an_umbrella_areas_sub_roadmaps_are_assessed_each_against_its_own_readme
     with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         make_roadmap(roadmap, {"Umbrella": None})
-        base = pathlib.Path(roadmap) / "TauCetiRoadmap" / "Umbrella"
+        base = pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Umbrella"
         index = ("# Umbrella\n\n## The roadmaps\n\n- [Spin](SpinRepresentations/README.md)\n"
                  "- [Roots](RootSystems/README.md)\n")
         (base / "README.md").write_text(index, encoding="utf-8")
@@ -486,24 +486,24 @@ def test_an_umbrella_areas_sub_roadmaps_are_assessed_each_against_its_own_readme
         assert got["readme_sha"] == hashlib.sha256(index.encode("utf-8")).hexdigest()
         sha = lambda child: hashlib.sha256(readmes[child].encode("utf-8")).hexdigest()
         assert got["sub_roadmaps"] == [
-            {"roadmap": "Umbrella/RootSystems", "readme": "TauCetiRoadmap/Umbrella/RootSystems/README.md",
+            {"roadmap": "Umbrella/RootSystems", "readme": "EpsilonEridaniRoadmaps/Umbrella/RootSystems/README.md",
              "readme_sha": sha("RootSystems"),
              "layers": [{"id": "Layer 0", "title": "Layer 0: axioms", "line": 3}]},
             {"roadmap": "Umbrella/SpinRepresentations",
-             "readme": "TauCetiRoadmap/Umbrella/SpinRepresentations/README.md",
+             "readme": "EpsilonEridaniRoadmaps/Umbrella/SpinRepresentations/README.md",
              "readme_sha": sha("SpinRepresentations"),
              "layers": [{"id": "Layer 0", "title": "Layer 0: basics", "line": 3},
                         {"id": "Layer 1", "title": "Layer 1: more", "line": 4}]},
         ], got["sub_roadmaps"]
         # The children are not areas of their own: labelled areas are top-level only.
-        assert plan.discover_areas(roadmap) == {"Umbrella": "TauCetiRoadmap/Umbrella"}
+        assert plan.discover_areas(roadmap) == {"Umbrella": "EpsilonEridaniRoadmaps/Umbrella"}
 
 
 def test_an_ordinary_area_has_no_sub_roadmaps():
     with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         make_roadmap(roadmap, {"Curves": None})
-        refs = pathlib.Path(roadmap) / "TauCetiRoadmap" / "Curves" / "references"
+        refs = pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "references"
         refs.mkdir()
         (refs / "README.md").write_text("### Layer 0: a paper\n", encoding="utf-8")
         assert plan_against(code, roadmap, shas[2], {"Curves": [1, 2]})["sub_roadmaps"] == []

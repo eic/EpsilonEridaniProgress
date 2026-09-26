@@ -1,4 +1,4 @@
-"""The `tauceti-progress` command line.
+"""The `epsiloneridani-progress` command line.
 
 Subcommands, in the order a round uses them:
 
@@ -129,7 +129,7 @@ def cmd_announce(args):
 
 
 def build_parser():
-    ap = argparse.ArgumentParser(prog="tauceti-progress", description=__doc__,
+    ap = argparse.ArgumentParser(prog="epsiloneridani-progress", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -141,8 +141,8 @@ def build_parser():
     d.set_defaults(fn=cmd_due)
 
     p = sub.add_parser("plan", help="pick the roadmap and the PR window")
-    p.add_argument("--roadmap-dir", required=True, help="a TauCetiRoadmap checkout")
-    p.add_argument("--code-dir", required=True, help="a full-history TauCeti checkout")
+    p.add_argument("--roadmap-dir", required=True, help="a EpsilonEridaniRoadmaps checkout")
+    p.add_argument("--code-dir", required=True, help="a full-history EpsilonEridani checkout")
     p.add_argument("--ref", default=None,
                    help="the code ref to read (default: the docs-tracking branch, origin/docgen)")
     p.add_argument("--idle-hours", type=float, default=None)
@@ -161,8 +161,8 @@ def build_parser():
     a.add_argument("--plan", required=True)
     a.add_argument("--status-body", required=True, help="file holding the model's STATUS prose")
     a.add_argument("--section-body", required=True, help="file holding the model's section prose")
-    a.add_argument("--roadmap-dir", required=True, help="a writable TauCetiRoadmap clone")
-    a.add_argument("--version", default=None, help="the TauCetiProgress SHA to record in the PR")
+    a.add_argument("--roadmap-dir", required=True, help="a writable EpsilonEridaniRoadmaps clone")
+    a.add_argument("--version", default=None, help="the EpsilonEridaniProgress SHA to record in the PR")
     a.add_argument("--dry-run", action="store_true", help="produce the commit, push nothing")
     a.set_defaults(fn=cmd_apply)
 
@@ -181,9 +181,9 @@ def build_parser():
     n.add_argument("--topic", default=None)
     n.add_argument(
         "--roadmap-parent",
-        choices=("TauCetiRoadmap", "Completed"),
-        default="TauCetiRoadmap",
-        help="parent directory containing the roadmap in TauCetiRoadmap",
+        choices=("EpsilonEridaniRoadmaps", "Completed"),
+        default="EpsilonEridaniRoadmaps",
+        help="parent directory containing the roadmap in EpsilonEridaniRoadmaps",
     )
     n.add_argument("--dry-run", action="store_true")
     n.set_defaults(fn=cmd_announce)

@@ -24,7 +24,7 @@ def check(name, fn):
 NOW = datetime.datetime(2026, 7, 30, 12, 0, 0, tzinfo=datetime.timezone.utc)
 
 
-OURS = "TauCetiProject"
+OURS = "eic"
 
 
 def pr(number=1, area="PDE", hours_old=1.0, created=True, owner=OURS):

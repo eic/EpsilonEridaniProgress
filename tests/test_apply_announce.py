@@ -32,14 +32,14 @@ PROSE = "Harnack's inequality landed for a nonnegative harmonic function on a pl
 
 PLAN = {
     "roadmap": "ContourIntegration",
-    "rel_dir": "TauCetiRoadmap/ContourIntegration",
+    "rel_dir": "EpsilonEridaniRoadmaps/ContourIntegration",
     "from_sha": A,
     "to_sha": B,
     "prs": [1464, 966, 1244],
     "from_date": "2026-07-28T09:11:00+00:00",
     "to_date": "2026-07-30T11:34:41+00:00",
-    "status_path": "TauCetiRoadmap/ContourIntegration/STATUS.md",
-    "progress_path": "TauCetiRoadmap/ContourIntegration/PROGRESS.md",
+    "status_path": "EpsilonEridaniRoadmaps/ContourIntegration/STATUS.md",
+    "progress_path": "EpsilonEridaniRoadmaps/ContourIntegration/PROGRESS.md",
 }
 
 
@@ -185,7 +185,7 @@ def test_render_update_tells_an_absent_block_from_a_null_one():
 def _umbrella_plan():
     plan = dict(PLAN)
     plan["layers"], plan["readme_sha"] = [], "0" * 64
-    root = f"TauCetiRoadmap/{plan['roadmap']}"
+    root = f"EpsilonEridaniRoadmaps/{plan['roadmap']}"
     plan["sub_roadmaps"] = [
         {"roadmap": f"{plan['roadmap']}/Residues", "readme": f"{root}/Residues/README.md", "readme_sha": "1" * 64,
          "layers": [{"id": "Layer 0", "title": "Layer 0: poles", "line": 3}]},
@@ -233,7 +233,7 @@ def test_render_update_gives_each_sub_roadmap_its_own_header():
 # ----- the wire contract with the consumer ----------------------------------------------------
 #
 # `tests/fixtures/coverage-contract/` holds a README, a model status body with its block, and the
-# exact header line the consumer (TauCeti's scripts/roadmap_progress.py) was recorded accepting.
+# exact header line the consumer (EpsilonEridani's scripts/roadmap_progress.py) was recorded accepting.
 # The consumer keeps its own extraction and validation code; this proves the producer still emits
 # byte for byte what it accepted, offline. It is not a live cross-repository test.
 
@@ -247,7 +247,7 @@ def _contract_plan(readme_text=None):
         lay, sha = plan_mod.read_area_layers(FIXTURE.parent, FIXTURE.name)
     else:
         lay, sha = layers.headings(readme_text), layers.readme_sha(readme_text)
-    return exp, {"roadmap": exp["roadmap"], "rel_dir": f"TauCetiRoadmap/{exp['roadmap']}",
+    return exp, {"roadmap": exp["roadmap"], "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
                  "from_sha": exp["from_sha"], "to_sha": exp["to_sha"], "prs": [1, 2],
                  "from_date": "2026-01-01T00:00:00Z", "to_date": "2026-02-01T00:00:00Z",
                  "layers": lay, "readme_sha": sha, "bootstrapped": True}
@@ -277,7 +277,7 @@ def test_the_producer_emits_the_sub_roadmap_headers_the_consumer_was_recorded_ac
     # `references/` has a README with a layer-like heading but no Suggested.lean: not a sub-roadmap.
     assert {s["roadmap"]: {"readme_sha": s["readme_sha"], "layer_ids": [l["id"] for l in s["layers"]],
                            "layer_lines": [l["line"] for l in s["layers"]]} for s in subs} == exp["sub_roadmaps"], subs
-    plan = {"roadmap": exp["roadmap"], "rel_dir": f"TauCetiRoadmap/{exp['roadmap']}",
+    plan = {"roadmap": exp["roadmap"], "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
             "from_sha": exp["from_sha"], "to_sha": exp["to_sha"], "prs": [1, 2],
             "from_date": "2026-01-01T00:00:00Z", "to_date": "2026-02-01T00:00:00Z",
             "layers": lay, "readme_sha": sha, "sub_roadmaps": subs, "bootstrapped": True}
@@ -331,7 +331,7 @@ def test_render_update_rejects_a_window_that_does_not_continue():
 
 
 def test_render_update_rejects_injected_marker():
-    evil = PROSE + ' <!--tauceti-status:v1 {"roadmap":"PDE"}-->'
+    evil = PROSE + ' <!--epsiloneridani-status:v1 {"roadmap":"PDE"}-->'
     try:
         apply_mod.render_update(PLAN, PROSE, evil, None, None)
     except files.FormatError as exc:
@@ -351,7 +351,7 @@ def make_section():
 def test_split_section_handles_a_first_report_with_its_preamble():
     """Regression: the appended text of an area's FIRST report is the file preamble PLUS the section,
     so a splitter that assumed the text began at the marker leaked the preamble and a raw
-    `<!--tauceti-progress:v1 ...-->` marker into the Zulip post."""
+    `<!--epsiloneridani-progress:v1 ...-->` marker into the Zulip post."""
     added = files.new_progress_file("PDE") + files.render_section(
         "PDE", A, B, [1], "w", "Harnack landed."
     )
@@ -359,17 +359,17 @@ def test_split_section_handles_a_first_report_with_its_preamble():
     assert header["roadmap"] == "PDE"
     assert prose == "Harnack landed.", repr(prose)
     assert "append-only record" not in prose
-    assert "tauceti-progress:v1" not in prose
+    assert "epsiloneridani-progress:v1" not in prose
     msg = announce.render_message(header, prose)
     assert "# Progress log" not in msg
-    assert "tauceti-progress:v1" not in msg
+    assert "epsiloneridani-progress:v1" not in msg
 
 
 def test_split_section_strips_machine_furniture():
     header, prose = announce.split_section(make_section())
     assert header["roadmap"] == "PDE"
     assert prose.startswith("Harnack"), prose
-    assert "tauceti-progress:v1" not in prose
+    assert "epsiloneridani-progress:v1" not in prose
     assert not prose.startswith("##")
 
 
@@ -393,7 +393,7 @@ def test_message_links_completed_roadmaps_under_completed():
     msg = announce.render_message(header, prose, roadmap_parent="Completed")
     assert "/Completed/PDE/PROGRESS.md" in msg
     assert "/Completed/PDE/STATUS.md" in msg
-    assert "/TauCetiRoadmap/PDE/" not in msg
+    assert "/EpsilonEridaniRoadmaps/PDE/" not in msg
 
 
 def test_message_is_capped():
@@ -405,10 +405,10 @@ def test_message_is_capped():
 
 def test_message_unwraps_prose_around_documentation_links():
     header, _ = announce.split_section(make_section())
-    link = "[each other's centralizers](https://example.org/GeneralLinear.html#TauCeti.centralizer)"
-    prose = f"The two images are\n{link},\nso the actions commute\n(TauCeti#5980)."
+    link = "[each other's centralizers](https://example.org/GeneralLinear.html#EpsilonEridani.centralizer)"
+    prose = f"The two images are\n{link},\nso the actions commute\n(EpsilonEridani#5980)."
     msg = announce.render_message(header, prose)
-    assert f"The two images are {link}, so the actions commute (TauCeti#5980)." in msg
+    assert f"The two images are {link}, so the actions commute (EpsilonEridani#5980)." in msg
     assert "\n" + link not in msg
 
 
@@ -455,10 +455,10 @@ def test_sanitize_defuses_mentions_and_bare_hashes():
 
 
 def test_sanitize_keeps_repo_linkifiers():
-    """Kim asked for `TauCeti#NNN` linkifiers rather than markdown links, so these must survive --
+    """Kim asked for `EpsilonEridani#NNN` linkifiers rather than markdown links, so these must survive --
     including the all-lowercase `mathlib4#NNNNN` form."""
-    out = zulip.sanitize("added in TauCeti#966 and mathlib4#33505")
-    assert "TauCeti#966" in out, out
+    out = zulip.sanitize("added in EpsilonEridani#966 and mathlib4#33505")
+    assert "EpsilonEridani#966" in out, out
     assert "mathlib4#33505" in out, out
 
 
@@ -494,7 +494,7 @@ def test_push_target_falls_back_to_a_fork():
 
     def fake_gh(args, **kw):
         calls.append(args)
-        if args[:2] == ["api", "repos/TauCetiProject/TauCetiRoadmap"]:
+        if args[:2] == ["api", "repos/eic/EpsilonEridaniRoadmaps"]:
             return "false\n"
         if args[0] == "api" and any("/forks" in a for a in args):
             # The jq already filtered on `.parent.full_name`, so a hit means a genuine fork.
@@ -514,7 +514,7 @@ def test_push_target_falls_back_to_a_fork():
     finally:
         apply_mod.gh.gh, apply_mod._run = orig_gh, orig_run
     assert (remote, owner) == ("fork", "someone")
-    assert ["repo", "fork", "TauCetiProject/TauCetiRoadmap", "--clone=false", "--remote=false"] in calls
+    assert ["repo", "fork", "eic/EpsilonEridaniRoadmaps", "--clone=false", "--remote=false"] in calls
 
 
 # ----- a stranger must not be able to lock a window ---------------------------------------------
@@ -543,7 +543,7 @@ def test_a_strangers_closed_pr_does_not_lock_the_window():
 
 def test_our_own_closed_pr_still_locks_the_window():
     """A report we filed and someone rejected must not come back by itself every day."""
-    for owner in ("kim-em", "TauCetiProject"):
+    for owner in ("kim-em", "eic"):
         rows = [{"number": 1, "state": "CLOSED", "url": "u", "mergedAt": None,
                  "headRepositoryOwner": {"login": owner}}]
         assert _with_pr_rows(rows) is not None, owner
@@ -576,7 +576,7 @@ def test_push_target_requires_the_fork_to_be_a_fork_of_this_repo():
     orig_gh, orig_run = apply_mod.gh.gh, apply_mod._run
 
     def fake_gh(args, **kw):
-        if args[:2] == ["api", "repos/TauCetiProject/TauCetiRoadmap"]:
+        if args[:2] == ["api", "repos/eic/EpsilonEridaniRoadmaps"]:
             return "false\n"
         if args[:2] == ["api", "user"]:
             return "someone\n"

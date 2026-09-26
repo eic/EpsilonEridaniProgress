@@ -1,6 +1,6 @@
 # Write a roadmap status snapshot
 
-You are writing the body of `STATUS.md` for one **Tau Ceti** roadmap: where that roadmap stands
+You are writing the body of `STATUS.md` for one **EpsilonEridani** roadmap: where that roadmap stands
 right now, and what the next steps are. This file is rewritten from scratch each time it is updated,
 so write a current description, not a change log — the change log is `PROGRESS.md`, beside it.
 
@@ -68,7 +68,7 @@ results. Link every selected named result and notable definition whose URL appea
 material. Use a markdown link whose target is that URL, copied exactly:
 
     the **Hungerbühler-Wasem residue theorem**
-    ([`residue_theorem_of_generalized_winding`](https://taucetiproject.github.io/TauCeti/docs/TauCeti/Analysis/Contour/Residue/Generalized.html#TauCeti.Contour.residue_theorem_of_generalized_winding))
+    ([`residue_theorem_of_generalized_winding`](https://epsiloneridaniproject.github.io/EpsilonEridani/docs/EpsilonEridani/Analysis/Contour/Residue/Generalized.html#EpsilonEridani.Contour.residue_theorem_of_generalized_winding))
 
 Rules:
 
@@ -77,7 +77,7 @@ Rules:
   plausible and resolve to nothing.
 - **An entry with no URL cannot be linked.** It is either private or was renamed away later in the
   window. Name it in prose if it matters and leave it unlinked.
-- **Cite pull requests sparingly**, as `TauCeti#1234`, never as links. A documentation link tells a
+- **Cite pull requests sparingly**, as `EpsilonEridani#1234`, never as links. A documentation link tells a
   reader what a result is; a pull request number only says where it was written. Use at most two in
   the whole snapshot, and only when that history adds something the documentation link does not.
 
@@ -90,7 +90,7 @@ Rules:
   job is the status of it.
 - Do not compare against Mathlib's contents beyond what the roadmap or the given material states.
   You cannot see Mathlib here.
-- Do not include any `<!--tauceti-...-->` marker; one in your prose will be rejected.
+- Do not include any `<!--epsiloneridani-...-->` marker; one in your prose will be rejected.
 - Do not mention dates, commits, or the reporting machinery. A header carries the commit and
   timestamp, and stating them again only creates something that can contradict it.
 

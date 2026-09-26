@@ -1,24 +1,24 @@
-# TauCetiProgress
+# EpsilonEridaniProgress
 
-Progress reporting for [Tau Ceti](https://github.com/TauCetiProject/TauCeti): what has actually
+Progress reporting for [EpsilonEridani](https://github.com/eic/EpsilonEridani): what has actually
 been achieved on each roadmap, written for a human to read in a minute.
 
 Each roadmap directory in
-[TauCetiRoadmap](https://github.com/TauCetiProject/TauCetiRoadmap) carries two generated files:
+[EpsilonEridaniRoadmaps](https://github.com/eic/EpsilonEridaniRoadmaps) carries two generated files:
 
 - **`STATUS.md`** — a snapshot, rewritten whole on each update. It says which parts of the roadmap
   are done and sketches the frontier, headed by the commit it describes.
 - **`PROGRESS.md`** — an append-only log. Each section covers one window of merged PRs as a few
   holistic paragraphs, emphasising named theorems rather than listing every PR.
 
-New `PROGRESS.md` sections are announced in the **Tau Ceti > Progress logs** Zulip topic.
+New `PROGRESS.md` sections are announced in the **EpsilonEridani > Progress logs** Zulip topic.
 
 ## Why this repo exists
 
 The rubrics-and-machinery split of
-[TauCetiReview](https://github.com/TauCetiProject/TauCetiReview), applied to reporting: the
-prompts and the tooling live here, the output lands in TauCetiRoadmap, and
-[TauCetiWorker](https://github.com/TauCetiProject/TauCetiWorker) drives it.
+[EpsilonEridaniReview](https://github.com/eic/EpsilonEridaniReview), applied to reporting: the
+prompts and the tooling live here, the output lands in EpsilonEridaniRoadmaps, and
+[EpsilonEridaniWorker](https://github.com/eic/EpsilonEridaniWorker) drives it.
 
 The design rule is that **a model only ever writes prose**. Every decision — whether an update is
 due, which roadmap it covers, which PRs are in the window, and what mathematics actually landed —
@@ -28,11 +28,11 @@ done by tested Python too.
 ## The commands
 
 ```
-tauceti-progress due                      is an update due? (one API call, no clone)
-tauceti-progress plan   --roadmap-dir DIR pick the roadmap and the PR window
-tauceti-progress facts  --plan FILE       what declarations actually landed in the window
-tauceti-progress apply  --plan FILE ...   write the files, open the PR (resumable)
-tauceti-progress announce --section FILE  post a new section to Zulip (idempotent)
+epsiloneridani-progress due                      is an update due? (one API call, no clone)
+epsiloneridani-progress plan   --roadmap-dir DIR pick the roadmap and the PR window
+epsiloneridani-progress facts  --plan FILE       what declarations actually landed in the window
+epsiloneridani-progress apply  --plan FILE ...   write the files, open the PR (resumable)
+epsiloneridani-progress announce --section FILE  post a new section to Zulip (idempotent)
 ```
 
 `due` is the only one that runs often; it exits 75 ("no progress") when nothing is due, matching
@@ -40,7 +40,7 @@ the worker's convention. `plan` runs at most once a day.
 
 ## The window cursor is a SHA, on the docs-tracking branch
 
-A window is the half-open commit range `(from_sha, to_sha]` on TauCeti's **`docgen`** branch, where
+A window is the half-open commit range `(from_sha, to_sha]` on EpsilonEridani's **`docgen`** branch, where
 `from_sha` is the `to_sha` of the previous `PROGRESS.md` section.
 
 `docgen` nominates the most recent commit on `main` whose API documentation has been published, and
@@ -72,17 +72,17 @@ those PRs are never reported at all.
 
 ## The coverage header
 
-A status snapshot may carry a second machine header beside `tauceti-status:v1`:
+A status snapshot may carry a second machine header beside `epsiloneridani-status:v1`:
 
 ```text
-<!--tauceti-status:v1 {"roadmap":"EllipticCurves","to_sha":"…","ts":"…"}-->
-<!--tauceti-coverage:v1 {"layers":[{"id":"Layer 0","remaining":"Weil reciprocity","state":"partial"},{"id":"Layer 1","state":"done"},…],"readme_sha":"…","roadmap":"EllipticCurves","to_sha":"…"}-->
+<!--epsiloneridani-status:v1 {"roadmap":"EllipticCurves","to_sha":"…","ts":"…"}-->
+<!--epsiloneridani-coverage:v1 {"layers":[{"id":"Layer 0","remaining":"Weil reciprocity","state":"partial"},{"id":"Layer 1","state":"done"},…],"readme_sha":"…","roadmap":"EllipticCurves","to_sha":"…"}-->
 # Status: EllipticCurves
 ```
 
 It is the report's verdict on each layer of the roadmap, in a form a script can read; the prose
 says the same things, but nothing can aggregate prose across forty roadmaps. The consumer is the
-TauCeti site's Progress page (`scripts/roadmap_progress.py` in the TauCeti repository).
+EpsilonEridani site's Progress page (`scripts/roadmap_progress.py` in the EpsilonEridani repository).
 
 **Wire schema.** `roadmap` is the status header's area, or `Area/Child` for a sub-roadmap (below);
 `to_sha` equals the status header's; `readme_sha` is the SHA-256 of the README the layers were read
@@ -126,12 +126,12 @@ layers) and in ascending order of name. The gate holds each to the same schema, 
 and treats all of them as part of the canonical prefix. A consumer that does not know sub-roadmap
 headers ignores them: their `roadmap` never equals a row's own name.
 
-**Rollout.** Merge here, then bump the two pins in TauCetiRoadmap's `progress-*.yml` workflows and
+**Rollout.** Merge here, then bump the two pins in EpsilonEridaniRoadmaps's `progress-*.yml` workflows and
 the worker's `PROGRESS_REF` to the same SHA, together: the generator and the gate must run one
 version. Reports written before the bump simply have no header.
 
 **Leaving the hand transcriptions.** Today the site reads layer states from a hand-transcribed
-file in the TauCeti repository (`scripts/roadmap_coverage.json`), each entry bound to the exact
+file in the EpsilonEridani repository (`scripts/roadmap_coverage.json`), each entry bound to the exact
 report it was read from. Nothing is backfilled: an area's transcription stays valid until its next
 report, which after the bump carries the headers (the worker refuses one without them when there
 are layers), and the site then reads those instead and the transcription is retired. That holds
@@ -145,16 +145,16 @@ once its roadmap's report carries a header.
 
 The merge gate proves the *shape* of a generated update — its paths, its cursor, that it is a
 byte-exact append, and that the head being merged is the head that was validated. It cannot prove
-that the prose is true. Anyone may open a Tau Ceti PR whose description contains prompt-injection
+that the prose is true. Anyone may open a EpsilonEridani PR whose description contains prompt-injection
 text; once that PR merges legitimately, its description reaches the writing model.
 
 The mitigations reduce the risk and are not claimed to remove it: the model is grounded in
 mechanically-extracted declaration names rather than author prose, PR bodies are delimited and
-size-capped, reserved `tauceti-*:v1` markers are rejected in model output, and Zulip mentions are
+size-capped, reserved `epsiloneridani-*:v1` markers are rejected in model output, and Zulip mentions are
 defused. Read these two files as a machine's summary, not as reviewed roadmap content.
 
 **The blast radius is two markdown files AND a Zulip message.** Every merged section is posted to
-**Tau Ceti > Progress logs** automatically, so accepted prose reaches an audience outside the
+**EpsilonEridani > Progress logs** automatically, so accepted prose reaches an audience outside the
 repository. The post is treated as data -- mentions and bare `#123` linkifiers are defused, the
 message is size-capped, it links both the appended log and the current roadmap status, and it is
 idempotent on a stable per-window id -- but it is a second sink and the threat model has to say so.

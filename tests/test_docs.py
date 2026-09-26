@@ -51,7 +51,7 @@ def make(pages, cache=None, ttl=None, fetched=None):
 PAGE = (FIXTURES / "module-page.html").read_text(encoding="utf-8")
 INDEX = json.dumps({
     "declarations": {
-        "TauCeti.IsFredholm": {"docLink": "./TauCeti/Analysis/Fredholm/Basic.html#TauCeti.IsFredholm",
+        "EpsilonEridani.IsFredholm": {"docLink": "./EpsilonEridani/Analysis/Fredholm/Basic.html#EpsilonEridani.IsFredholm",
                                "kind": "structure"},
     },
     "modules": {},
@@ -59,15 +59,15 @@ INDEX = json.dumps({
 
 
 def test_declarations_are_read_from_real_markup():
-    d = make({"TauCeti/Analysis/Fredholm/Basic.html": PAGE})
-    got = d.declarations("TauCeti/Analysis/Fredholm/Basic.html")
-    assert "TauCeti.IsFredholm" in got, sorted(got)
-    e = got["TauCeti.IsFredholm"]
+    d = make({"EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE})
+    got = d.declarations("EpsilonEridani/Analysis/Fredholm/Basic.html")
+    assert "EpsilonEridani.IsFredholm" in got, sorted(got)
+    e = got["EpsilonEridani.IsFredholm"]
     assert e["kind"] == "structure", e
-    assert e["file"] == "TauCeti/Analysis/Fredholm/Basic.lean", e
+    assert e["file"] == "EpsilonEridani/Analysis/Fredholm/Basic.lean", e
     assert e["start"] == 61 and e["end"] == 73, e
     assert len(e["commit"]) == 40, e
-    assert e["url"].endswith("Basic.html#TauCeti.IsFredholm"), e
+    assert e["url"].endswith("Basic.html#EpsilonEridani.IsFredholm"), e
 
 
 def test_every_declaration_block_is_found():
@@ -77,13 +77,13 @@ def test_every_declaration_block_is_found():
 
 
 def test_source_commit_comes_from_the_page():
-    d = make({"TauCeti/Analysis/Fredholm/Basic.html": PAGE, docs_mod.INDEX_PATH: INDEX})
+    d = make({"EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE, docs_mod.INDEX_PATH: INDEX})
     assert d.source_commit() == "ed837d596f81c587c5b9696efed02a869f945e7e", d.source_commit()
 
 
 def test_index_is_parsed_and_maps_names_to_pages():
     d = make({docs_mod.INDEX_PATH: INDEX})
-    assert d.module_of("TauCeti.IsFredholm") == "TauCeti/Analysis/Fredholm/Basic.html"
+    assert d.module_of("EpsilonEridani.IsFredholm") == "EpsilonEridani/Analysis/Fredholm/Basic.html"
     assert d.module_of("Nope.Missing") is None
 
 
@@ -198,7 +198,7 @@ def test_a_cache_write_is_atomic_and_leaves_no_litter():
 def page_at(commit, name="A.b"):
     return (
         f'<div class="decl" id="{name}"><span class="decl_kind">theorem</span>'
-        f'<div class="gh_link"><a href="https://github.com/o/r/blob/{commit}/TauCeti/A.lean#L1-L2">src</a>'
+        f'<div class="gh_link"><a href="https://github.com/o/r/blob/{commit}/EpsilonEridani/A.lean#L1-L2">src</a>'
         f"</div></div>"
     )
 

@@ -37,7 +37,7 @@ STATUS_NAME = "STATUS.md"
 PROGRESS_NAME = "PROGRESS.md"
 
 # Where areas live in the roadmap repo. `Completed/` holds finished roadmaps (EffectiveBounds).
-AREAS_DIR = "TauCetiRoadmap"
+AREAS_DIR = "EpsilonEridaniRoadmaps"
 COMPLETED_DIR = "Completed"
 
 
@@ -47,7 +47,7 @@ class NotDue(Exception):
 
 
 def docs_source_commit():
-    """The TauCeti commit the published documentation was built from, or None if unreadable."""
+    """The EpsilonEridani commit the published documentation was built from, or None if unreadable."""
     from .docs import Docs, DocsError
 
     try:
@@ -68,8 +68,8 @@ def _parse_iso(text):
 def discover_areas(roadmap_dir):
     """`{area: relative_dir}` for every roadmap area in a checkout.
 
-    An area is a top-level directory under `TauCetiRoadmap/` that contains a `README.md` -- exactly
-    the rule `TauCeti/scripts/roadmap_label.py:canonical_areas` uses, so the areas here and the
+    An area is a top-level directory under `EpsilonEridaniRoadmaps/` that contains a `README.md` -- exactly
+    the rule `EpsilonEridani/scripts/roadmap_label.py:canonical_areas` uses, so the areas here and the
     `roadmap/<Area>` labels can never disagree. Archived roadmaps under `Completed/` are included so
     their existing status files are still found, but they are excluded from selection unless new
     PRs arrive for them.
@@ -108,7 +108,7 @@ def read_sub_roadmaps(roadmap_dir, area, rel_dir):
 
     A sub-roadmap is a directory directly below the area that is itself a roadmap: a `README.md`
     and a `Suggested.lean`, which keeps a `references/` folder with a README of its own out. That is
-    the consumer's rule (`read_roadmaps` in TauCeti's `scripts/roadmap_progress.py`). The area's
+    the consumer's rule (`read_roadmaps` in EpsilonEridani's `scripts/roadmap_progress.py`). The area's
     label covers all of them, so its report is the only account of them, and each gets its own
     coverage header, bound to its own README. One with no layer headings, or whose directory name
     the header format cannot carry, is left out: there is nothing it could say about it.
@@ -145,7 +145,7 @@ def last_update_age_hours(commits, now=None):
     """Hours since the newest merged progress update, or None if there has never been one.
 
     Reads the roadmap repo's own commit history, so the cadence is measured against when reports
-    actually *landed* -- not against the TauCeti window they describe, and not against any local
+    actually *landed* -- not against the EpsilonEridani window they describe, and not against any local
     state a fleet could not share.
     """
     now = now or _utcnow()

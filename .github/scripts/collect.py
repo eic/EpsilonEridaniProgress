@@ -44,8 +44,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from progress import files, gate, gh as gh_mod, plan as plan_mod, window  # noqa: E402
 
 # Where the reported window has to live. `to_sha` is checked for reachability from this branch, which
-# tracks the newest TauCeti commit with published documentation.
-CODE_REPO = "TauCetiProject/TauCeti"
+# tracks the newest EpsilonEridani commit with published documentation.
+CODE_REPO = "eic/EpsilonEridani"
 CODE_REF = "docgen"
 ROADMAP_LABEL_PREFIX = "roadmap/"
 
@@ -260,7 +260,7 @@ def compare_status(repo, base, head):
 
 
 def resolve_window(new_progress, repo=CODE_REPO, ref=CODE_REF):
-    """Check the newly-appended section's window against real TauCeti history.
+    """Check the newly-appended section's window against real EpsilonEridani history.
 
     Without this, `to_sha` is unconstrained. Cursor continuity pins `from_sha` to the area's current
     cursor, but nothing stopped a report naming an arbitrary 40-hex `to_sha`, landing, and leaving the
@@ -371,7 +371,7 @@ def main(argv=None):
     # ----- the previous contents, at main_sha, from the parent THIS DIFF TOUCHES ---------------
     #
     # The parent is derived from the changed paths, never probed in a fixed order. Probing
-    # `TauCetiRoadmap/` first was a real hole: an area can exist under both parents, so a pull request
+    # `EpsilonEridaniRoadmaps/` first was a real hole: an area can exist under both parents, so a pull request
     # changing `Completed/<area>/` would be handed the ACTIVE log as its append-only baseline, and a
     # wholesale replacement of the archived log then looked like a valid append.
     old_status = old_progress = last_report_at = None

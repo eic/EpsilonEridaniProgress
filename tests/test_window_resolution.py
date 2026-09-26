@@ -1,4 +1,4 @@
-"""Tests for resolving a reported window against real TauCeti history.
+"""Tests for resolving a reported window against real EpsilonEridani history.
 
 Anyone may open a progress pull request, so this is what keeps that bounded: `to_sha` must name a
 commit the project actually published, strictly after `from_sha`. Without it a chain of reports could

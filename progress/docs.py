@@ -11,7 +11,7 @@ approximation of that gets *most* names right, which is the worst possible outco
 are indistinguishable from the right ones, and a documentation link built from a wrong name is a
 plausible-looking dead link. The first version of this code produced
 `ContinuousLinearMap.IsFredholm.of_continuousLinearEquiv` for a declaration the compiler calls
-`TauCeti.IsFredholm.of_continuousLinearEquiv`.
+`EpsilonEridani.IsFredholm.of_continuousLinearEquiv`.
 
 doc-gen4 already publishes the answer, computed from the elaborated environment:
 
@@ -34,14 +34,14 @@ import time
 import urllib.error
 import urllib.request
 
-DOCS_BASE = "https://taucetiproject.github.io/TauCeti/docs"
+DOCS_BASE = "https://epsiloneridaniproject.github.io/EpsilonEridani/docs"
 INDEX_PATH = "declarations/declaration-data.bmp"
 
 # How long a cached page may be reused across runs.
 #
 # The site is static within one build but the builds keep coming, so a cache with no expiry pins
 # every later run to whichever build it first saw. That is not hypothetical: a worker's
-# `/tmp/tauceti-docs-cache` held an index from five days earlier, `source_commit()` therefore
+# `/tmp/epsiloneridani-docs-cache` held an index from five days earlier, `source_commit()` therefore
 # returned a five-day-old commit, and every window `plan` could close ended there. An area whose
 # first pull request merged after that commit then had a cursor outside the documented history, and
 # the whole plan aborted -- so no progress report was written at all until someone deleted the
@@ -72,7 +72,7 @@ class Docs:
     def __init__(self, base=DOCS_BASE, cache_dir=None, opener=None, ttl=None):
         self.base = base.rstrip("/")
         self.cache_dir = pathlib.Path(
-            cache_dir or os.environ.get("TAUCETI_DOCS_CACHE") or "/tmp/tauceti-docs-cache"
+            cache_dir or os.environ.get("TAUCETI_DOCS_CACHE") or "/tmp/epsiloneridani-docs-cache"
         )
         self.ttl = DOCS_CACHE_TTL if ttl is None else ttl
         self._opener = opener or self._fetch
@@ -231,7 +231,7 @@ class Docs:
         return out
 
     def source_commit(self, probe_module=None):
-        """The TauCeti commit the published documentation was built from.
+        """The EpsilonEridani commit the published documentation was built from.
 
         Read from the site itself rather than assumed, because the docs deploy independently of the
         branch that nominates them: at the time of writing the published build was several commits

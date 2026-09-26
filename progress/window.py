@@ -1,4 +1,4 @@
-"""Commit windows: turning a range of TauCeti history into the set of PRs it contains.
+"""Commit windows: turning a range of EpsilonEridani history into the set of PRs it contains.
 
 A window is the half-open commit range `(from_sha, to_sha]` on the docs-tracking branch (see
 `CODE_REF`). `from_sha` is the previous section's `to_sha`, so consecutive windows tile exactly with
@@ -22,7 +22,7 @@ _SQUASH_RE = re.compile(r"\(#(\d+)\)\s*\Z")
 _MERGE_RE = re.compile(r"\AMerge pull request #(\d+)\b")
 
 
-# Windows track the `docgen` branch of TauCeti, NOT `main`.
+# Windows track the `docgen` branch of EpsilonEridani, NOT `main`.
 #
 # `docgen` follows the most recent commit on `main` for which the API documentation has actually been
 # published. Reporting against it means every declaration a report can mention already has a page, so

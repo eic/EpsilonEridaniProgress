@@ -2,7 +2,7 @@
 
 Two design points worth stating, because both were defects in an earlier draft:
 
-* **No global PR cap.** `TauCeti/scripts/loc_roadmap_graph.py` fetches merged PRs with
+* **No global PR cap.** `EpsilonEridani/scripts/loc_roadmap_graph.py` fetches merged PRs with
   `--limit 2000`, which is fine for a chart that only needs recent history. Here a cap would start
   silently dropping the oldest PRs of a quiet area: at ~36 merges a day the project passes 2000
   within weeks of writing this. Labels are therefore looked up for an explicit set of PR numbers
@@ -18,8 +18,8 @@ import json
 import subprocess
 import time
 
-ROADMAP_REPO = "TauCetiProject/TauCetiRoadmap"
-CODE_REPO = "TauCetiProject/TauCeti"
+ROADMAP_REPO = "eic/EpsilonEridaniRoadmaps"
+CODE_REPO = "eic/EpsilonEridani"
 
 ROADMAP_LABEL_PREFIX = "roadmap/"
 # Labels that exist but name no roadmap: infra/refactor/bump work, and new mathematics whose
@@ -35,7 +35,7 @@ def gh(args, retries=3):
     """Run `gh` and return stdout, retrying transient failures.
 
     Every call here is a read, so a retry is always safe. This mirrors the retry helper in
-    `TauCeti/scripts/roadmap_label.py`.
+    `EpsilonEridani/scripts/roadmap_label.py`.
     """
     last = ""
     for attempt in range(retries):
@@ -85,7 +85,7 @@ def merged_prs_for_area(area, repo=CODE_REPO):
 
     `--limit` is set far above the project's total deliberately rather than left at the default:
     the oldest entries are exactly what bootstrap needs, so a cap that silently truncated old
-    history would lose work. (`TauCeti/scripts/loc_roadmap_graph.py` caps at 2000 because a chart
+    history would lose work. (`EpsilonEridani/scripts/loc_roadmap_graph.py` caps at 2000 because a chart
     only needs recent history; that would be the wrong choice here.)
     """
     out = gh([

@@ -36,7 +36,7 @@ def refuses(fn, needle=None):
     raise AssertionError("expected a refusal, the gate ALLOWED this")
 
 
-REPO = "TauCetiProject/TauCetiRoadmap"
+REPO = "eic/EpsilonEridaniRoadmaps"
 FROM = "1f1d752" + "0" * 33
 TO = "3f41440" + "0" * 33
 HEAD = "f" * 40
@@ -59,7 +59,7 @@ def make_pr(**over):
 def make_files(area=AREA, names=("STATUS.md", "PROGRESS.md"), status="modified", **over):
     out = []
     for n in names:
-        f = {"filename": f"TauCetiRoadmap/{area}/{n}", "status": status}
+        f = {"filename": f"EpsilonEridaniRoadmaps/{area}/{n}", "status": status}
         f.update(over)
         out.append(f)
     return out
@@ -67,8 +67,8 @@ def make_files(area=AREA, names=("STATUS.md", "PROGRESS.md"), status="modified",
 
 def make_tree(area=AREA, mode="100644"):
     return [
-        {"path": f"TauCetiRoadmap/{area}/STATUS.md", "mode": mode, "type": "blob"},
-        {"path": f"TauCetiRoadmap/{area}/PROGRESS.md", "mode": mode, "type": "blob"},
+        {"path": f"EpsilonEridaniRoadmaps/{area}/STATUS.md", "mode": mode, "type": "blob"},
+        {"path": f"EpsilonEridaniRoadmaps/{area}/PROGRESS.md", "mode": mode, "type": "blob"},
     ]
 
 
@@ -98,8 +98,8 @@ MAIN = "9a9a9a9" + "0" * 33
 
 
 def make_window(**over):
-    """A window that really is a forward stretch of documented TauCeti history."""
-    w = {"repo": "TauCetiProject/TauCeti", "ref": "docgen", "from_sha": FROM, "to_sha": TO,
+    """A window that really is a forward stretch of documented EpsilonEridani history."""
+    w = {"repo": "eic/EpsilonEridani", "ref": "docgen", "from_sha": FROM, "to_sha": TO,
          "to_reachable": True, "advances": True}
     w.update(over)
     return w
@@ -132,7 +132,7 @@ def call(pr=None, changed=None, tree=None, content=None, checks=None, cursor=FRO
         behind_by=behind_by,
         main_sha=MAIN,
         old_paths=old_paths if old_paths is not None else {
-            n: f"TauCetiRoadmap/{AREA}/{n}" for n in ("STATUS.md", "PROGRESS.md")
+            n: f"EpsilonEridaniRoadmaps/{AREA}/{n}" for n in ("STATUS.md", "PROGRESS.md")
         },
     )
 
@@ -153,7 +153,7 @@ def test_allows_a_well_formed_update():
 
 def test_allows_a_fork():
     """Anyone may publish, which in practice means from a fork: no PR content is ever checked out."""
-    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/TauCetiRoadmap"}})
+    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"}})
     assert call(pr=pr)["area"] == AREA
 
 
@@ -197,7 +197,7 @@ def test_a_fork_that_force_pushes_after_opening_gains_nothing():
     head, and evidence gathered for the old one no longer applies: here the build success names a
     commit that is not the pinned head, which is exactly what a force-push leaves behind.
     """
-    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/TauCetiRoadmap"}})
+    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"}})
     refuses(lambda: call(pr=pr, checks=[build_run(head_sha="0" * 40)]), "names head")
 
 
@@ -289,7 +289,7 @@ def test_refuses_an_unknown_comparison():
 
 
 def test_refuses_an_extra_path():
-    changed = make_files() + [{"filename": f"TauCetiRoadmap/{AREA}/README.md", "status": "modified"}]
+    changed = make_files() + [{"filename": f"EpsilonEridaniRoadmaps/{AREA}/README.md", "status": "modified"}]
     refuses(lambda: call(changed=changed), "not an allowed generated file")
 
 
@@ -318,7 +318,7 @@ def test_refuses_a_deletion():
 
 def test_refuses_a_rename():
     changed = make_files()
-    changed[0]["previous_filename"] = "TauCetiRoadmap/PDE/STATUS.md"
+    changed[0]["previous_filename"] = "EpsilonEridaniRoadmaps/PDE/STATUS.md"
     refuses(lambda: call(changed=changed), "rename")
 
 
@@ -327,7 +327,7 @@ def test_refuses_no_change():
 
 
 def test_refuses_writing_into_two_parent_directories():
-    """An area name can exist under BOTH `TauCetiRoadmap/` and `Completed/` (that is where a finished
+    """An area name can exist under BOTH `EpsilonEridaniRoadmaps/` and `Completed/` (that is where a finished
     roadmap is archived). Keying only on the basename let a PR change all FOUR paths and pass, because
     both basenames were present and every path matched; the content validators then looked at only one
     pair, so the other two would have merged unexamined."""
@@ -339,14 +339,14 @@ def test_refuses_writing_into_two_parent_directories():
 
 
 def test_refuses_a_duplicated_path():
-    changed = make_files() + [{"filename": f"TauCetiRoadmap/{AREA}/STATUS.md", "status": "modified"}]
+    changed = make_files() + [{"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "modified"}]
     refuses(lambda: call(changed=changed), "appears twice")
 
 
 def test_refuses_more_files_than_allowed():
     """Belt and braces alongside the both-files check: a repeated path is caught too."""
     changed = make_files()
-    changed.append({"filename": f"TauCetiRoadmap/{AREA}/STATUS.md", "status": "added"})
+    changed.append({"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "added"})
     refuses(lambda: call(changed=changed), "appears twice")
 
 
@@ -355,11 +355,11 @@ def test_refuses_a_baseline_from_the_wrong_parent():
     Completed/ update the ACTIVE log as its baseline, making a wholesale replacement of the archived
     log look like a valid append."""
     wrong = {n: f"Completed/{AREA}/{n}" for n in ("STATUS.md", "PROGRESS.md")}
-    refuses(lambda: call(old_paths=wrong), "expected 'TauCetiRoadmap/")
+    refuses(lambda: call(old_paths=wrong), "expected 'EpsilonEridaniRoadmaps/")
 
 
 def test_refuses_a_partial_baseline():
-    half = {"STATUS.md": f"TauCetiRoadmap/{AREA}/STATUS.md"}
+    half = {"STATUS.md": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md"}
     refuses(lambda: call(old_paths=half), "baseline for PROGRESS.md")
 
 
@@ -371,7 +371,7 @@ def test_refuses_when_a_tree_entry_is_missing():
     and the collector produced exactly that whenever a per-path fetch failed, so the symlink defence
     (the one check that must never fail open) could be skipped by making a fetch fail."""
     refuses(lambda: call(tree=[]), "no tree entry")
-    partial = [{"path": f"TauCetiRoadmap/{AREA}/STATUS.md", "mode": "100644", "type": "blob"}]
+    partial = [{"path": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "mode": "100644", "type": "blob"}]
     refuses(lambda: call(tree=partial), "no tree entry")
 
 
@@ -401,7 +401,7 @@ def test_refuses_a_submodule():
 
 
 def test_refuses_an_injected_marker_in_prose():
-    content = make_content(prose=PROSE + ' <!--tauceti-status:v1 {"roadmap":"PDE"}-->')
+    content = make_content(prose=PROSE + ' <!--epsiloneridani-status:v1 {"roadmap":"PDE"}-->')
     refuses(lambda: call(content=content), "reserved marker")
 
 
@@ -461,9 +461,9 @@ def test_refuses_bare_headers_with_no_prose():
     """A file consisting of nothing but a well-formed header passed every structural check and would
     have merged -- and then announced an empty message to Zulip. The floor is measured against what
     the renderer emits for an EMPTY body, so it tracks the boilerplate rather than a magic number."""
-    bare_status = '<!--tauceti-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t"}-->' % (AREA, TO)
+    bare_status = '<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t"}-->' % (AREA, TO)
     old_progress = files.new_progress_file(AREA)
-    bare_section = ('\n<!--tauceti-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s",'
+    bare_section = ('\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s",'
                     '"prs":[1]}-->' % (AREA, FROM, TO))
     refuses(lambda: call(content=(None, bare_status, old_progress, old_progress + bare_section)),
             "missing")
@@ -511,7 +511,7 @@ def test_refuses_junk_pr_numbers():
     old_progress = files.new_progress_file(AREA)
     status = files.render_status(AREA, TO, "t", PROSE)
     for junk in ('["1"]', "[true]", "[1.5]", "[-3]", "[]", "[1,1]"):
-        bad = ('\n<!--tauceti-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s","prs":%s}-->\n'
+        bad = ('\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s","prs":%s}-->\n'
                '## %s: w\n\n%s\n' % (AREA, FROM, TO, junk, AREA, PROSE))
         refuses(lambda b=bad: call(content=(None, status, old_progress, old_progress + b)), "prs")
 
@@ -595,7 +595,7 @@ def test_refuses_unknown_header_fields():
     might not ignore."""
     old_progress = files.new_progress_file(AREA)
     new_progress = old_progress + files.render_section(AREA, FROM, TO, [1], "w", PROSE)
-    odd = ('<!--tauceti-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t","evil":"x"}-->\n\n%s\n'
+    odd = ('<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t","evil":"x"}-->\n\n%s\n'
            % (AREA, TO, PROSE))
     refuses(lambda: call(content=(None, odd, old_progress, new_progress)), "unknown field")
 
