@@ -140,6 +140,6 @@ jobs:
       # bypasses EpsilonEridani's ruleset, not this one, so a direct merge with its token would be refused
       # for want of a code-owner review. auto-merge.yml can use it because it only *enables* GitHub's
       # native auto-merge and lets the ruleset gate the merge; this workflow merges directly.
-      app_id: ${{ vars.SYNC_BOT_APP_ID }}
+      client_id: ${{ vars.SYNC_BOT_CLIENT_ID }}
     secrets:
       APP_PRIVATE_KEY: ${{ secrets.SYNC_BOT_APP_PRIVATE_KEY }}
