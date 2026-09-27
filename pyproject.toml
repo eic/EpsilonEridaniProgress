@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Decide, generate, and publish per-roadmap progress reports for EpsilonEridani."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 # No Python dependencies: like the review engine, this shells out to the `git` and `gh`
 # CLIs, and talks to Zulip over the standard library.
 dependencies = []
@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 [tool.setuptools]
-packages = ["progress"]
+packages = ["progress", "progress.prompts"]
 
 [tool.setuptools.package-data]
 # Inside the package, not `../prompts`: setuptools does not reliably ship files from outside the
