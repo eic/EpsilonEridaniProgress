@@ -46,7 +46,13 @@ def sanitize_untrusted(text):
     return out.strip()
 
 
-def render(plan, fact_data, pr_details, max_declarations=MAX_DECLARATIONS, max_bodies=MAX_BODIES):
+def render(
+    plan,
+    fact_data,
+    pr_details,
+    max_declarations=MAX_DECLARATIONS,
+    max_bodies=MAX_BODIES,
+):
     """The context block for one window, as text.
 
     `pr_details` is `[{number,title,body,url,merged_at}]`, newest first.
@@ -125,7 +131,9 @@ def render(plan, fact_data, pr_details, max_declarations=MAX_DECLARATIONS, max_b
         doc = f" -- {d['doc']}" if d["doc"] else ""
         url = f" <{d['url']}>" if d.get("url") else ""
         state = "" if d.get("new") else " [revised, not new]"
-        body.append(f"- `{d['name']}` ({d['kind']}, EpsilonEridani#{d['pr']}, {d['file']}){state}{doc}{url}")
+        body.append(
+            f"- `{d['name']}` ({d['kind']}, EpsilonEridani#{d['pr']}, {d['file']}){state}{doc}{url}"
+        )
 
     body += [
         "",
@@ -138,13 +146,17 @@ def render(plan, fact_data, pr_details, max_declarations=MAX_DECLARATIONS, max_b
     ]
     for pr in with_bodies:
         body.append("")
-        body.append(f"### EpsilonEridani#{pr['number']}: {pr['title'][:MAX_TITLE_CHARS]}")
+        body.append(
+            f"### EpsilonEridani#{pr['number']}: {pr['title'][:MAX_TITLE_CHARS]}"
+        )
         text = sanitize_untrusted(pr.get("body") or "")[:MAX_BODY_CHARS]
         body.append(f"{FENCE}\n{text}\n{FENCE_END}" if text else "(no description)")
 
     if without:
         body += ["", "### Remaining pull requests in this window (titles only)", ""]
         for pr in without:
-            body.append(f"- EpsilonEridani#{pr['number']}: {pr['title'][:MAX_TITLE_CHARS]}")
+            body.append(
+                f"- EpsilonEridani#{pr['number']}: {pr['title'][:MAX_TITLE_CHARS]}"
+            )
 
     return "\n".join(intro + body) + "\n"

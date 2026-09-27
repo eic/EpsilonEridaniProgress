@@ -67,6 +67,7 @@ def test_pr_title_carries_the_due_check_prefix():
     # A squash merge turns the title into the commit subject, and `due` finds the last update by
     # scanning subjects for exactly this prefix. If these drift, the cadence check goes blind.
     from progress import plan as plan_mod
+
     assert title.startswith(plan_mod.COMMIT_PREFIX), title
     assert "ContourIntegration" in title and "2026-07-30" in title
 
@@ -84,9 +85,7 @@ def test_pr_body_records_the_window_and_prs():
 
 
 def test_render_update_produces_a_valid_pair():
-    status, progress, header = apply_mod.render_update(
-        PLAN, PROSE, PROSE, None, None
-    )
+    status, progress, header = apply_mod.render_update(PLAN, PROSE, PROSE, None, None)
     assert header["prs"] == sorted(PLAN["prs"])
     assert header["from_sha"] == A and header["to_sha"] == B
     # The progress file is the fresh preamble plus exactly one section.
@@ -96,8 +95,10 @@ def test_render_update_produces_a_valid_pair():
 
 def _plan_with_layers():
     plan = dict(PLAN)
-    plan["layers"] = [{"id": "Layer 0", "title": "Layer 0: curves", "line": 10},
-                      {"id": "Layer 1", "title": "Layer 1: cycles", "line": 20}]
+    plan["layers"] = [
+        {"id": "Layer 0", "title": "Layer 0: curves", "line": 10},
+        {"id": "Layer 1", "title": "Layer 1: cycles", "line": 20},
+    ]
     plan["readme_sha"] = "0" * 64
     return plan
 
@@ -109,9 +110,19 @@ def test_render_update_turns_the_coverage_block_into_the_header():
     plan = _plan_with_layers()
     status_text, _, _ = apply_mod.render_update(plan, PROSE + BLOCK, PROSE, None, None)
     parsed = files.parse_status(status_text)
-    assert parsed["coverage"] == {"roadmap": plan["roadmap"], "to_sha": plan["to_sha"], "readme_sha": "0" * 64,
-                                  "layers": [{"id": "Layer 0", "state": "done"},
-                                             {"id": "Layer 1", "state": "partial", "remaining": "the homological version"}]}, parsed
+    assert parsed["coverage"] == {
+        "roadmap": plan["roadmap"],
+        "to_sha": plan["to_sha"],
+        "readme_sha": "0" * 64,
+        "layers": [
+            {"id": "Layer 0", "state": "done"},
+            {
+                "id": "Layer 1",
+                "state": "partial",
+                "remaining": "the homological version",
+            },
+        ],
+    }, parsed
     assert "```coverage" not in status_text
     assert status_text.rstrip().endswith(PROSE.rstrip())
 
@@ -137,19 +148,33 @@ def test_render_update_refuses_a_missing_block_when_the_plan_lists_layers():
     except files.FormatError as exc:
         assert "no ```coverage block" in str(exc) and "unassessed" in str(exc), exc
     else:
-        raise AssertionError("a report with layers to assess and no block must be refused")
-    headerless = files.render_status(plan["roadmap"], plan["to_sha"], plan["to_date"], PROSE, None)
+        raise AssertionError(
+            "a report with layers to assess and no block must be refused"
+        )
+    headerless = files.render_status(
+        plan["roadmap"], plan["to_sha"], plan["to_date"], PROSE, None
+    )
     progress = files.new_progress_file(plan["roadmap"]) + files.render_section(
-        plan["roadmap"], plan["from_sha"], plan["to_sha"], plan["prs"], "window", PROSE)
-    files.validate_update(plan["roadmap"], None, headerless, None, progress, expect_from_sha=plan["from_sha"])
+        plan["roadmap"], plan["from_sha"], plan["to_sha"], plan["prs"], "window", PROSE
+    )
+    files.validate_update(
+        plan["roadmap"],
+        None,
+        headerless,
+        None,
+        progress,
+        expect_from_sha=plan["from_sha"],
+    )
 
 
 def test_render_update_refuses_a_lone_surrogate_as_a_format_error():
     """JSON can spell a lone surrogate, which no UTF-8 file can hold. It must be refused as a
     malformed block, not surface later as a UnicodeEncodeError while the files are written."""
     plan = _plan_with_layers()
-    body = PROSE + '\n\n```coverage\n[{"id": "Layer 0", "state": "done"}, ' \
-                   '{"id": "Layer 1", "state": "partial", "remaining": "a \\ud800 b"}]\n```\n'
+    body = (
+        PROSE + '\n\n```coverage\n[{"id": "Layer 0", "state": "done"}, '
+        '{"id": "Layer 1", "state": "partial", "remaining": "a \\ud800 b"}]\n```\n'
+    )
     try:
         apply_mod.render_update(plan, body, PROSE, None, None)
     except files.FormatError as exc:
@@ -163,7 +188,9 @@ def test_render_update_without_layers_is_a_plain_report():
     status_text, _, _ = apply_mod.render_update(dict(PLAN), PROSE, PROSE, None, None)
     assert files.parse_status(status_text)["coverage"] is None
     # An older plan with no layers: a block is dropped rather than refused.
-    status_text, _, _ = apply_mod.render_update(dict(PLAN), PROSE + BLOCK, PROSE, None, None)
+    status_text, _, _ = apply_mod.render_update(
+        dict(PLAN), PROSE + BLOCK, PROSE, None, None
+    )
     assert files.parse_status(status_text)["coverage"] is None
     assert "```coverage" not in status_text
 
@@ -173,13 +200,20 @@ def test_render_update_tells_an_absent_block_from_a_null_one():
     a null block must be refused on its own account, not mistaken for a missing one."""
     plan = _plan_with_layers()
     try:
-        apply_mod.render_update(plan, PROSE + "\n\n```coverage\nnull\n```\n", PROSE, None, None)
+        apply_mod.render_update(
+            plan, PROSE + "\n\n```coverage\nnull\n```\n", PROSE, None, None
+        )
     except files.FormatError as exc:
         assert "JSON null" in str(exc), exc
     else:
         raise AssertionError("a ```coverage block holding null must be refused")
     status_text, _, _ = apply_mod.render_update(plan, PROSE + BLOCK, PROSE, None, None)
-    assert [l["id"] for l in files.parse_status(status_text)["coverage"]["layers"]] == ["Layer 0", "Layer 1"]
+    assert [
+        lay["id"] for lay in files.parse_status(status_text)["coverage"]["layers"]
+    ] == [
+        "Layer 0",
+        "Layer 1",
+    ]
 
 
 def _umbrella_plan():
@@ -187,10 +221,21 @@ def _umbrella_plan():
     plan["layers"], plan["readme_sha"] = [], "0" * 64
     root = f"EpsilonEridaniRoadmaps/{plan['roadmap']}"
     plan["sub_roadmaps"] = [
-        {"roadmap": f"{plan['roadmap']}/Residues", "readme": f"{root}/Residues/README.md", "readme_sha": "1" * 64,
-         "layers": [{"id": "Layer 0", "title": "Layer 0: poles", "line": 3}]},
-        {"roadmap": f"{plan['roadmap']}/Winding", "readme": f"{root}/Winding/README.md", "readme_sha": "2" * 64,
-         "layers": [{"id": "Lane A", "title": "Lane A: cycles", "line": 3}, {"id": "Lane B", "title": "Lane B: homotopy", "line": 5}]},
+        {
+            "roadmap": f"{plan['roadmap']}/Residues",
+            "readme": f"{root}/Residues/README.md",
+            "readme_sha": "1" * 64,
+            "layers": [{"id": "Layer 0", "title": "Layer 0: poles", "line": 3}],
+        },
+        {
+            "roadmap": f"{plan['roadmap']}/Winding",
+            "readme": f"{root}/Winding/README.md",
+            "readme_sha": "2" * 64,
+            "layers": [
+                {"id": "Lane A", "title": "Lane A: cycles", "line": 3},
+                {"id": "Lane B", "title": "Lane B: homotopy", "line": 5},
+            ],
+        },
     ]
     return plan
 
@@ -198,20 +243,48 @@ def _umbrella_plan():
 def test_render_update_gives_each_sub_roadmap_its_own_header():
     plan = _umbrella_plan()
     area = plan["roadmap"]
-    block = {f"{area}/Winding": [{"id": "Lane B", "state": "untouched"}, {"id": "Lane A", "state": "done"}],
-             f"{area}/Residues": [{"id": "Layer 0", "state": "partial", "remaining": "the argument principle"}]}
+    block = {
+        f"{area}/Winding": [
+            {"id": "Lane B", "state": "untouched"},
+            {"id": "Lane A", "state": "done"},
+        ],
+        f"{area}/Residues": [
+            {"id": "Layer 0", "state": "partial", "remaining": "the argument principle"}
+        ],
+    }
     body = PROSE + "\n\n```coverage\n" + json.dumps(block, indent=2) + "\n```\n"
-    status_text, progress_text, _ = apply_mod.render_update(plan, body, PROSE, None, None)
+    status_text, progress_text, _ = apply_mod.render_update(
+        plan, body, PROSE, None, None
+    )
     parsed = files.parse_status(status_text)
     assert parsed["coverage"] is None
     assert parsed["sub_coverage"] == [
-        {"roadmap": f"{area}/Residues", "to_sha": B, "readme_sha": "1" * 64,
-         "layers": [{"id": "Layer 0", "state": "partial", "remaining": "the argument principle"}]},
-        {"roadmap": f"{area}/Winding", "to_sha": B, "readme_sha": "2" * 64,
-         "layers": [{"id": "Lane A", "state": "done"}, {"id": "Lane B", "state": "untouched"}]},
+        {
+            "roadmap": f"{area}/Residues",
+            "to_sha": B,
+            "readme_sha": "1" * 64,
+            "layers": [
+                {
+                    "id": "Layer 0",
+                    "state": "partial",
+                    "remaining": "the argument principle",
+                }
+            ],
+        },
+        {
+            "roadmap": f"{area}/Winding",
+            "to_sha": B,
+            "readme_sha": "2" * 64,
+            "layers": [
+                {"id": "Lane A", "state": "done"},
+                {"id": "Lane B", "state": "untouched"},
+            ],
+        },
     ], parsed["sub_coverage"]
     assert "```coverage" not in status_text
-    files.validate_update(area, None, status_text, None, progress_text, expect_from_sha=A)
+    files.validate_update(
+        area, None, status_text, None, progress_text, expect_from_sha=A
+    )
     # The umbrella's layers are its children's: a report without the block is refused for them too.
     try:
         apply_mod.render_update(plan, PROSE, PROSE, None, None)
@@ -242,27 +315,42 @@ FIXTURE = pathlib.Path(__file__).resolve().parent / "fixtures" / "coverage-contr
 
 def _contract_plan(readme_text=None):
     from progress import layers, plan as plan_mod
+
     exp = json.loads((FIXTURE / "expected.json").read_text(encoding="utf-8"))
     if readme_text is None:
         lay, sha = plan_mod.read_area_layers(FIXTURE.parent, FIXTURE.name)
     else:
         lay, sha = layers.headings(readme_text), layers.readme_sha(readme_text)
-    return exp, {"roadmap": exp["roadmap"], "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
-                 "from_sha": exp["from_sha"], "to_sha": exp["to_sha"], "prs": [1, 2],
-                 "from_date": "2026-01-01T00:00:00Z", "to_date": "2026-02-01T00:00:00Z",
-                 "layers": lay, "readme_sha": sha, "bootstrapped": True}
+    return exp, {
+        "roadmap": exp["roadmap"],
+        "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
+        "from_sha": exp["from_sha"],
+        "to_sha": exp["to_sha"],
+        "prs": [1, 2],
+        "from_date": "2026-01-01T00:00:00Z",
+        "to_date": "2026-02-01T00:00:00Z",
+        "layers": lay,
+        "readme_sha": sha,
+        "bootstrapped": True,
+    }
 
 
 def test_the_producer_emits_the_header_the_consumer_was_recorded_accepting():
     exp, plan = _contract_plan()
-    assert [l["id"] for l in plan["layers"]] == exp["layer_ids"], plan["layers"]
-    assert [l["line"] for l in plan["layers"]] == exp["layer_lines"], plan["layers"]
+    assert [lay["id"] for lay in plan["layers"]] == exp["layer_ids"], plan["layers"]
+    assert [lay["line"] for lay in plan["layers"]] == exp["layer_lines"], plan["layers"]
     assert plan["readme_sha"] == exp["readme_sha"]
     body = (FIXTURE / "status-body.md").read_text(encoding="utf-8")
-    status_text, progress_text, _ = apply_mod.render_update(plan, body, PROSE, None, None)
-    assert status_text.splitlines()[1] == exp["header_line"], status_text.splitlines()[1]
+    status_text, progress_text, _ = apply_mod.render_update(
+        plan, body, PROSE, None, None
+    )
+    assert status_text.splitlines()[1] == exp["header_line"], status_text.splitlines()[
+        1
+    ]
     assert "```coverage" not in status_text
-    files.validate_update(exp["roadmap"], None, status_text, None, progress_text)  # the gate accepts the pair
+    files.validate_update(
+        exp["roadmap"], None, status_text, None, progress_text
+    )  # the gate accepts the pair
 
 
 UMBRELLA = FIXTURE.parent / "coverage-contract-umbrella"
@@ -270,19 +358,37 @@ UMBRELLA = FIXTURE.parent / "coverage-contract-umbrella"
 
 def test_the_producer_emits_the_sub_roadmap_headers_the_consumer_was_recorded_accepting():
     from progress import plan as plan_mod
+
     exp = json.loads((UMBRELLA / "expected.json").read_text(encoding="utf-8"))
     lay, sha = plan_mod.read_area_layers(UMBRELLA.parent, UMBRELLA.name)
     subs = plan_mod.read_sub_roadmaps(UMBRELLA.parent, exp["roadmap"], UMBRELLA.name)
     assert lay == [] and sha == exp["readme_sha"]
     # `references/` has a README with a layer-like heading but no Suggested.lean: not a sub-roadmap.
-    assert {s["roadmap"]: {"readme_sha": s["readme_sha"], "layer_ids": [l["id"] for l in s["layers"]],
-                           "layer_lines": [l["line"] for l in s["layers"]]} for s in subs} == exp["sub_roadmaps"], subs
-    plan = {"roadmap": exp["roadmap"], "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
-            "from_sha": exp["from_sha"], "to_sha": exp["to_sha"], "prs": [1, 2],
-            "from_date": "2026-01-01T00:00:00Z", "to_date": "2026-02-01T00:00:00Z",
-            "layers": lay, "readme_sha": sha, "sub_roadmaps": subs, "bootstrapped": True}
+    assert {
+        s["roadmap"]: {
+            "readme_sha": s["readme_sha"],
+            "layer_ids": [lay["id"] for lay in s["layers"]],
+            "layer_lines": [lay["line"] for lay in s["layers"]],
+        }
+        for s in subs
+    } == exp["sub_roadmaps"], subs
+    plan = {
+        "roadmap": exp["roadmap"],
+        "rel_dir": f"EpsilonEridaniRoadmaps/{exp['roadmap']}",
+        "from_sha": exp["from_sha"],
+        "to_sha": exp["to_sha"],
+        "prs": [1, 2],
+        "from_date": "2026-01-01T00:00:00Z",
+        "to_date": "2026-02-01T00:00:00Z",
+        "layers": lay,
+        "readme_sha": sha,
+        "sub_roadmaps": subs,
+        "bootstrapped": True,
+    }
     body = (UMBRELLA / "status-body.md").read_text(encoding="utf-8")
-    status_text, progress_text, _ = apply_mod.render_update(plan, body, PROSE, None, None)
+    status_text, progress_text, _ = apply_mod.render_update(
+        plan, body, PROSE, None, None
+    )
     lines = status_text.splitlines()
     assert lines[1:3] == exp["header_lines"], lines[1:3]
     assert lines[3] == f"# Status: {exp['roadmap']}"
@@ -294,10 +400,12 @@ def test_editing_the_readme_changes_the_hash_the_consumer_refuses_on():
     (which compares it against the README it reads) refuses the old assessment."""
     readme = (FIXTURE / "README.md").read_text(encoding="utf-8")
     exp, _ = _contract_plan()
-    for edited in (readme + "\nA new requirement in Layer 2.\n",
-                   readme.replace("Hasse's bound", "the Hasse–Weil bound")):
+    for edited in (
+        readme + "\nA new requirement in Layer 2.\n",
+        readme.replace("Hasse's bound", "the Hasse–Weil bound"),
+    ):
         _, plan = _contract_plan(edited)
-        assert [l["id"] for l in plan["layers"]] == exp["layer_ids"]
+        assert [lay["id"] for lay in plan["layers"]] == exp["layer_ids"]
         assert plan["readme_sha"] != exp["readme_sha"]
         body = (FIXTURE / "status-body.md").read_text(encoding="utf-8")
         status_text, _, _ = apply_mod.render_update(plan, body, PROSE, None, None)
@@ -344,8 +452,14 @@ def test_render_update_rejects_injected_marker():
 
 
 def make_section():
-    return files.render_section("PDE", A, B, [1299, 1300], "2026-07-29 to 2026-07-30",
-                                "Harnack's inequality landed, with the sharp constant.")
+    return files.render_section(
+        "PDE",
+        A,
+        B,
+        [1299, 1300],
+        "2026-07-29 to 2026-07-30",
+        "Harnack's inequality landed, with the sharp constant.",
+    )
 
 
 def test_split_section_handles_a_first_report_with_its_preamble():
@@ -406,9 +520,14 @@ def test_message_is_capped():
 def test_message_unwraps_prose_around_documentation_links():
     header, _ = announce.split_section(make_section())
     link = "[each other's centralizers](https://example.org/GeneralLinear.html#EpsilonEridani.centralizer)"
-    prose = f"The two images are\n{link},\nso the actions commute\n(EpsilonEridani#5980)."
+    prose = (
+        f"The two images are\n{link},\nso the actions commute\n(EpsilonEridani#5980)."
+    )
     msg = announce.render_message(header, prose)
-    assert f"The two images are {link}, so the actions commute (EpsilonEridani#5980)." in msg
+    assert (
+        f"The two images are {link}, so the actions commute (EpsilonEridani#5980)."
+        in msg
+    )
     assert "\n" + link not in msg
 
 
@@ -468,7 +587,6 @@ def test_sanitize_leaves_headings_and_plain_hashes_alone():
     assert zulip.sanitize("C# is not relevant here") == "C# is not relevant here"
 
 
-
 # ----- publishing without push access ----------------------------------------------------------
 
 
@@ -507,6 +625,7 @@ def test_push_target_falls_back_to_a_fork():
 
     class P:
         returncode = 1
+
     apply_mod.gh.gh = fake_gh
     apply_mod._run = lambda *a, **kw: P()
     try:
@@ -514,7 +633,13 @@ def test_push_target_falls_back_to_a_fork():
     finally:
         apply_mod.gh.gh, apply_mod._run = orig_gh, orig_run
     assert (remote, owner) == ("fork", "someone")
-    assert ["repo", "fork", "eic/EpsilonEridaniRoadmaps", "--clone=false", "--remote=false"] in calls
+    assert [
+        "repo",
+        "fork",
+        "eic/EpsilonEridaniRoadmaps",
+        "--clone=false",
+        "--remote=false",
+    ] in calls
 
 
 # ----- a stranger must not be able to lock a window ---------------------------------------------
@@ -522,10 +647,12 @@ def test_push_target_falls_back_to_a_fork():
 
 def _with_pr_rows(rows):
     orig = apply_mod.gh.gh
+
     def fake(args, **kw):
         if args[:2] == ["api", "user"]:
             return "kim-em\n"
         return json.dumps(rows)
+
     apply_mod.gh.gh = fake
     try:
         return apply_mod.own_pr("progress/a1b2c3d-b9c8d7e/PDE", states=("closed",))
@@ -536,37 +663,69 @@ def _with_pr_rows(rows):
 def test_a_strangers_closed_pr_does_not_lock_the_window():
     """The attack: branch names are a pure function of the window, so anyone can open and instantly
     close a pull request on that name. Honouring it would stop the window ever being published."""
-    rows = [{"number": 1, "state": "CLOSED", "url": "u", "mergedAt": None,
-             "headRepositoryOwner": {"login": "stranger"}}]
+    rows = [
+        {
+            "number": 1,
+            "state": "CLOSED",
+            "url": "u",
+            "mergedAt": None,
+            "headRepositoryOwner": {"login": "stranger"},
+        }
+    ]
     assert _with_pr_rows(rows) is None
 
 
 def test_our_own_closed_pr_still_locks_the_window():
     """A report we filed and someone rejected must not come back by itself every day."""
     for owner in ("kim-em", "eic"):
-        rows = [{"number": 1, "state": "CLOSED", "url": "u", "mergedAt": None,
-                 "headRepositoryOwner": {"login": owner}}]
+        rows = [
+            {
+                "number": 1,
+                "state": "CLOSED",
+                "url": "u",
+                "mergedAt": None,
+                "headRepositoryOwner": {"login": owner},
+            }
+        ]
         assert _with_pr_rows(rows) is not None, owner
 
 
 def test_a_merged_pr_is_not_treated_as_a_rejection():
-    rows = [{"number": 1, "state": "MERGED", "url": "u", "mergedAt": "2026-07-30T00:00:00Z",
-             "headRepositoryOwner": {"login": "kim-em"}}]
+    rows = [
+        {
+            "number": 1,
+            "state": "MERGED",
+            "url": "u",
+            "mergedAt": "2026-07-30T00:00:00Z",
+            "headRepositoryOwner": {"login": "kim-em"},
+        }
+    ]
     assert _with_pr_rows(rows) is None
 
 
 def test_a_strangers_open_pr_does_not_block_us():
     """Otherwise anyone could freeze a roadmap by opening one pull request a day."""
-    rows = [{"number": 1, "state": "OPEN", "url": "u", "mergedAt": None,
-             "headRepositoryOwner": {"login": "stranger"}}]
+    rows = [
+        {
+            "number": 1,
+            "state": "OPEN",
+            "url": "u",
+            "mergedAt": None,
+            "headRepositoryOwner": {"login": "stranger"},
+        }
+    ]
     orig = apply_mod.gh.gh
+
     def fake(args, **kw):
         if args[:2] == ["api", "user"]:
             return "kim-em\n"
         return json.dumps(rows)
+
     apply_mod.gh.gh = fake
     try:
-        assert apply_mod.own_pr("progress/a1b2c3d-b9c8d7e/PDE", states=("open",)) is None
+        assert (
+            apply_mod.own_pr("progress/a1b2c3d-b9c8d7e/PDE", states=("open",)) is None
+        )
     finally:
         apply_mod.gh.gh = orig
 
@@ -581,13 +740,14 @@ def test_push_target_requires_the_fork_to_be_a_fork_of_this_repo():
         if args[:2] == ["api", "user"]:
             return "someone\n"
         if args[0] == "api" and any("/forks" in a for a in args):
-            return ""            # not in the fork listing
+            return ""  # not in the fork listing
         if args[0] == "api":
-            return "\n"          # `.parent.full_name` empty: an unrelated same-named repo
+            return "\n"  # `.parent.full_name` empty: an unrelated same-named repo
         return ""
 
     class P:
         returncode = 1
+
     apply_mod.gh.gh, apply_mod._run = fake_gh, lambda *a, **kw: P()
     try:
         apply_mod.push_target("/nonexistent")
@@ -597,6 +757,7 @@ def test_push_target_requires_the_fork_to_be_a_fork_of_this_repo():
         raise AssertionError("an unrelated same-named repository must not be used")
     finally:
         apply_mod.gh.gh, apply_mod._run = orig_gh, orig_run
+
 
 for _name, _fn in sorted(globals().items()):
     if _name.startswith("test_") and callable(_fn):

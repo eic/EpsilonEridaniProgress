@@ -37,6 +37,7 @@ def make(pages, cache=None, ttl=None, fetched=None):
     `fetched` collects the site-relative paths that actually reached the transport, so a test can
     assert a cache hit or miss rather than inferring one from the content.
     """
+
     def opener(url):
         rel = url.split("/docs/", 1)[1]
         if fetched is not None:
@@ -44,18 +45,27 @@ def make(pages, cache=None, ttl=None, fetched=None):
         if rel not in pages:
             raise DocsError(f"no such page: {rel}")
         return pages[rel]
-    return Docs(base="https://example.test/docs", cache_dir=cache or "/nonexistent",
-                opener=opener, ttl=ttl)
+
+    return Docs(
+        base="https://example.test/docs",
+        cache_dir=cache or "/nonexistent",
+        opener=opener,
+        ttl=ttl,
+    )
 
 
 PAGE = (FIXTURES / "module-page.html").read_text(encoding="utf-8")
-INDEX = json.dumps({
-    "declarations": {
-        "EpsilonEridani.IsFredholm": {"docLink": "./EpsilonEridani/Analysis/Fredholm/Basic.html#EpsilonEridani.IsFredholm",
-                               "kind": "structure"},
-    },
-    "modules": {},
-})
+INDEX = json.dumps(
+    {
+        "declarations": {
+            "EpsilonEridani.IsFredholm": {
+                "docLink": "./EpsilonEridani/Analysis/Fredholm/Basic.html#EpsilonEridani.IsFredholm",
+                "kind": "structure",
+            },
+        },
+        "modules": {},
+    }
+)
 
 
 def test_declarations_are_read_from_real_markup():
@@ -73,22 +83,39 @@ def test_declarations_are_read_from_real_markup():
 def test_every_declaration_block_is_found():
     d = make({"p.html": PAGE})
     got = d.declarations("p.html")
-    assert len(got) == PAGE.count('<div class="decl" id="'), (len(got), PAGE.count('<div class="decl" id="'))
+    assert len(got) == PAGE.count('<div class="decl" id="'), (
+        len(got),
+        PAGE.count('<div class="decl" id="'),
+    )
 
 
 def test_source_commit_comes_from_the_page():
-    d = make({"EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE, docs_mod.INDEX_PATH: INDEX})
-    assert d.source_commit() == "ed837d596f81c587c5b9696efed02a869f945e7e", d.source_commit()
+    d = make(
+        {
+            "EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE,
+            docs_mod.INDEX_PATH: INDEX,
+        }
+    )
+    assert d.source_commit() == "ed837d596f81c587c5b9696efed02a869f945e7e", (
+        d.source_commit()
+    )
 
 
 def test_index_is_parsed_and_maps_names_to_pages():
     d = make({docs_mod.INDEX_PATH: INDEX})
-    assert d.module_of("EpsilonEridani.IsFredholm") == "EpsilonEridani/Analysis/Fredholm/Basic.html"
+    assert (
+        d.module_of("EpsilonEridani.IsFredholm")
+        == "EpsilonEridani/Analysis/Fredholm/Basic.html"
+    )
     assert d.module_of("Nope.Missing") is None
 
 
 def test_a_malformed_index_is_refused():
-    for bad in ("not json", json.dumps({"declarations": {}}), json.dumps({"modules": {}})):
+    for bad in (
+        "not json",
+        json.dumps({"declarations": {}}),
+        json.dumps({"modules": {}}),
+    ):
         d = make({docs_mod.INDEX_PATH: bad})
         try:
             d.index()
@@ -105,7 +132,11 @@ def test_a_page_with_no_declarations_yields_nothing():
 def test_markup_that_stops_matching_is_visible():
     """A page whose decl blocks carry no source link still lists the declarations, without a
     position -- so the caller cannot decide they are new, rather than guessing that they are."""
-    d = make({"p.html": '<div class="decl" id="A.b"><span class="decl_kind">theorem</span></div>'})
+    d = make(
+        {
+            "p.html": '<div class="decl" id="A.b"><span class="decl_kind">theorem</span></div>'
+        }
+    )
     got = d.declarations("p.html")
     assert got["A.b"]["start"] is None and got["A.b"]["commit"] is None, got
 
@@ -157,7 +188,10 @@ def test_a_positive_ttl_expires_too():
         make({"p.html": "one"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html")
         entry = pathlib.Path(tmp) / "p.html"
         os.utime(entry, (0, time.time() - 7200))
-        assert make({"p.html": "two"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html") == "two"
+        assert (
+            make({"p.html": "two"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html")
+            == "two"
+        )
         assert fetched == ["p.html", "p.html"], fetched
 
 
@@ -169,7 +203,10 @@ def test_an_mtime_in_the_future_is_not_fresh():
         make({"p.html": "one"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html")
         entry = pathlib.Path(tmp) / "p.html"
         os.utime(entry, (0, time.time() + 86400))
-        assert make({"p.html": "two"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html") == "two"
+        assert (
+            make({"p.html": "two"}, cache=tmp, ttl=3600, fetched=fetched)._get("p.html")
+            == "two"
+        )
         assert fetched == ["p.html", "p.html"], fetched
 
 
@@ -189,7 +226,9 @@ def test_a_cache_write_is_atomic_and_leaves_no_litter():
         d._get("p.html")
         entry = pathlib.Path(tmp) / "p.html"
         assert entry.read_text(encoding="utf-8") == "x" * 5000
-        assert [p.name for p in pathlib.Path(tmp).iterdir()] == ["p.html"], "temp files were left behind"
+        assert [p.name for p in pathlib.Path(tmp).iterdir()] == ["p.html"], (
+            "temp files were left behind"
+        )
 
 
 # ----- one build per run ---------------------------------------------------------------------
@@ -204,10 +243,15 @@ def page_at(commit, name="A.b"):
 
 
 OLD, NEW = "a" * 40, "b" * 40
-TWO_PAGE_INDEX = json.dumps({"declarations": {
-    "A.b": {"docLink": "./probe.html#A.b", "kind": "theorem"},
-    "C.d": {"docLink": "./other.html#C.d", "kind": "theorem"},
-}, "modules": {}})
+TWO_PAGE_INDEX = json.dumps(
+    {
+        "declarations": {
+            "A.b": {"docLink": "./probe.html#A.b", "kind": "theorem"},
+            "C.d": {"docLink": "./other.html#C.d", "kind": "theorem"},
+        },
+        "modules": {},
+    }
+)
 
 
 def test_a_page_from_another_build_is_refetched():
@@ -215,12 +259,20 @@ def test_a_page_from_another_build_is_refetched():
     page is still served, in-TTL, from the old one. `facts` would then read line spans from one
     build and blame them at the other's commit."""
     with tempfile.TemporaryDirectory() as tmp:
-        pages = {docs_mod.INDEX_PATH: TWO_PAGE_INDEX, "probe.html": page_at(OLD), "other.html": page_at(OLD)}
-        make(pages, cache=tmp, ttl=3600)._get("other.html")  # the old build's page, now cached
+        pages = {
+            docs_mod.INDEX_PATH: TWO_PAGE_INDEX,
+            "probe.html": page_at(OLD),
+            "other.html": page_at(OLD),
+        }
+        make(pages, cache=tmp, ttl=3600)._get(
+            "other.html"
+        )  # the old build's page, now cached
         pages["probe.html"] = page_at(NEW)
         pages["other.html"] = page_at(NEW)
         d = make(pages, cache=tmp, ttl=3600)
-        assert d.source_commit() == NEW, "the probe is fetched fresh here, so it names the new build"
+        assert d.source_commit() == NEW, (
+            "the probe is fetched fresh here, so it names the new build"
+        )
         got = d.declarations("other.html")
         assert got["A.b"]["commit"] == NEW, got["A.b"]["commit"]
 
@@ -229,7 +281,11 @@ def test_a_site_redeploying_under_a_run_is_refused():
     """If the page still disagrees after a re-fetch the deploy is in flight. Refusing is the honest
     outcome: `plan` treats DocsError as "not due" and the next run closes the window cleanly."""
     with tempfile.TemporaryDirectory() as tmp:
-        pages = {docs_mod.INDEX_PATH: TWO_PAGE_INDEX, "probe.html": page_at(NEW), "other.html": page_at(OLD)}
+        pages = {
+            docs_mod.INDEX_PATH: TWO_PAGE_INDEX,
+            "probe.html": page_at(NEW),
+            "other.html": page_at(OLD),
+        }
         d = make(pages, cache=tmp, ttl=3600)
         assert d.source_commit() == NEW
         try:

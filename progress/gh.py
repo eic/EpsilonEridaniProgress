@@ -44,7 +44,7 @@ def gh(args, retries=3):
             return proc.stdout
         last = proc.stderr.strip()
         if attempt + 1 < retries:
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     raise GhError(f"gh {' '.join(args)} failed after {retries} attempts: {last}")
 
 
@@ -88,11 +88,22 @@ def merged_prs_for_area(area, repo=CODE_REPO):
     history would lose work. (`EpsilonEridani/scripts/loc_roadmap_graph.py` caps at 2000 because a chart
     only needs recent history; that would be the wrong choice here.)
     """
-    out = gh([
-        "pr", "list", "--repo", repo, "--state", "merged",
-        "--label", f"{ROADMAP_LABEL_PREFIX}{area}",
-        "--limit", "100000", "--json", "number",
-    ])
+    out = gh(
+        [
+            "pr",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "merged",
+            "--label",
+            f"{ROADMAP_LABEL_PREFIX}{area}",
+            "--limit",
+            "100000",
+            "--json",
+            "number",
+        ]
+    )
     try:
         rows = json.loads(out)
     except json.JSONDecodeError as exc:
@@ -138,11 +149,20 @@ def open_progress_prs(repo=ROADMAP_REPO, branch_prefix="progress/"):
     refuses permanently never merges and never closes itself, and without an age it would mark its
     area in flight forever, silently stopping that roadmap's reporting for every operator.
     """
-    out = gh([
-        "pr", "list", "--repo", repo, "--state", "open",
-        "--limit", "200", "--json",
-        "number,headRefName,title,url,createdAt,headRepositoryOwner,body",
-    ])
+    out = gh(
+        [
+            "pr",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "open",
+            "--limit",
+            "200",
+            "--json",
+            "number,headRefName,title,url,createdAt,headRepositoryOwner,body",
+        ]
+    )
     rows = json.loads(out)
     return [r for r in rows if (r.get("headRefName") or "").startswith(branch_prefix)]
 

@@ -63,7 +63,7 @@ def sanitize(text):
             out.append(ZWSP)
         elif ch == "#":
             preceded_by_word = i > 0 and text[i - 1].isalnum()
-            followed_by_digit = text[i + 1:i + 2].isdigit()
+            followed_by_digit = text[i + 1 : i + 2].isdigit()
             if followed_by_digit and not preceded_by_word:
                 out.append(ZWSP)
     return "".join(out)
@@ -99,22 +99,27 @@ class Zulip:
                 # 401, Zulip's own UNAUTHORIZED, or a 403 that Zulip itself answered (a JSON body)
                 # are permission breaks. An opaque 403 with no body is usually a proxy, so treat
                 # that as transient.
-                if (exc.code == 401
-                        or payload.get("code") == "UNAUTHORIZED"
-                        or (exc.code == 403 and payload)):
+                if (
+                    exc.code == 401
+                    or payload.get("code") == "UNAUTHORIZED"
+                    or (exc.code == 403 and payload)
+                ):
                     raise ConfigError(detail) from exc
                 last = detail
             except (urllib.error.URLError, TimeoutError) as exc:
                 last = f"Zulip {method} {path}: {exc}"
             if attempt + 1 < retries:
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
         raise TransientError(last or f"Zulip {method} {path} failed")
 
     def my_user_id(self):
         return self._call("GET", "/users/me")["user_id"]
 
     def my_subscriptions(self):
-        return [s["name"] for s in self._call("GET", "/users/me/subscriptions")["subscriptions"]]
+        return [
+            s["name"]
+            for s in self._call("GET", "/users/me/subscriptions")["subscriptions"]
+        ]
 
     def search(self, channel, topic, query):
         """Recent messages in a topic matching `query`, raw markdown (so content compares exactly)."""
@@ -123,15 +128,29 @@ class Zulip:
             {"operator": "topic", "operand": topic},
             {"operator": "search", "operand": query},
         ]
-        return self._call("GET", "/messages", {
-            "anchor": "newest", "num_before": 200, "num_after": 0,
-            "apply_markdown": "false", "narrow": json.dumps(narrow),
-        })["messages"]
+        return self._call(
+            "GET",
+            "/messages",
+            {
+                "anchor": "newest",
+                "num_before": 200,
+                "num_after": 0,
+                "apply_markdown": "false",
+                "narrow": json.dumps(narrow),
+            },
+        )["messages"]
 
     def send(self, channel, topic, content):
-        return self._call("POST", "/messages", {
-            "type": "stream", "to": channel, "topic": topic, "content": content,
-        })["id"]
+        return self._call(
+            "POST",
+            "/messages",
+            {
+                "type": "stream",
+                "to": channel,
+                "topic": topic,
+                "content": content,
+            },
+        )["id"]
 
     def check(self, channel):
         """Confirm the bot can act in `channel`. Raises ConfigError when it cannot."""

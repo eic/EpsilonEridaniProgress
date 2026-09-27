@@ -54,7 +54,9 @@ def test_prompts_live_inside_the_package():
     """
     assert cli.PROMPT_DIR == pathlib.Path(cli.__file__).resolve().parent / "prompts"
     assert (cli.PROMPT_DIR / "progress.md").is_file()
-    assert not (ROOT / "prompts").exists(), "the old top-level copy must be gone, not duplicated"
+    assert not (ROOT / "prompts").exists(), (
+        "the old top-level copy must be gone, not duplicated"
+    )
 
 
 def test_generated_package_artifacts_are_not_tracked():
@@ -72,8 +74,14 @@ def test_generated_package_artifacts_are_not_tracked():
 def test_the_worker_placeholders_are_all_present():
     """The worker substitutes these after fetching; a renamed one would silently ship as literal."""
     text = (cli.PROMPT_DIR / "progress.md").read_text()
-    for key in ("__ROADMAP__", "__ROADMAP_DIR__", "__PLAN_FILE__", "__FACTS_FILE__",
-                "__STATUS_OUT__", "__SECTION_OUT__"):
+    for key in (
+        "__ROADMAP__",
+        "__ROADMAP_DIR__",
+        "__PLAN_FILE__",
+        "__FACTS_FILE__",
+        "__STATUS_OUT__",
+        "__SECTION_OUT__",
+    ):
         assert key in text, key
 
 
@@ -120,10 +128,16 @@ def test_the_progress_prompt_carries_earlier_assessments_forward():
     that earlier verdicts stand unless there is a reason to revise them."""
     text = " ".join((cli.PROMPT_DIR / "progress.md").read_text().split())
     assert "ground truth for this window" in text
-    assert "it did not land in this window" in text and "If a result is not in here, it did not land. " not in text
+    assert (
+        "it did not land in this window" in text
+        and "If a result is not in here, it did not land. " not in text
+    )
     assert "evidence for what landed in earlier windows" in text
     assert "Carry their assessments forward unless" in text
-    assert "not this window" in text and "does not become `unassessed` merely because nothing for it landed" in text
+    assert (
+        "not this window" in text
+        and "does not become `unassessed` merely because nothing for it landed" in text
+    )
     assert "Do not claim anything the declaration list does not support." not in text
 
 

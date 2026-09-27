@@ -13,7 +13,9 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-_spec = importlib.util.spec_from_file_location("collect", ROOT / ".github" / "scripts" / "collect.py")
+_spec = importlib.util.spec_from_file_location(
+    "collect", ROOT / ".github" / "scripts" / "collect.py"
+)
 collect = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(collect)
 
@@ -72,8 +74,9 @@ def test_bracket_pair_inside_a_string_value_survives():
     rewrote data instead of failing. A filename containing it would have been mangled into a path
     that no longer matched, and a `patch` into something that was never sent.
     """
-    payload = (json.dumps([{"filename": "a.md", "patch": "prose containing ][ brackets"}])
-               + json.dumps([{"filename": "b.md"}]))
+    payload = json.dumps(
+        [{"filename": "a.md", "patch": "prose containing ][ brackets"}]
+    ) + json.dumps([{"filename": "b.md"}])
     got = with_output(payload)
     assert got[0]["patch"] == "prose containing ][ brackets", got[0]["patch"]
     assert [g["filename"] for g in got] == ["a.md", "b.md"], got

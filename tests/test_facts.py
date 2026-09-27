@@ -36,9 +36,12 @@ def check(name, fn):
 
 ENV = {
     **os.environ,
-    "GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@e",
-    "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@e",
-    "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z", "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
+    "GIT_AUTHOR_NAME": "T",
+    "GIT_AUTHOR_EMAIL": "t@e",
+    "GIT_COMMITTER_NAME": "T",
+    "GIT_COMMITTER_EMAIL": "t@e",
+    "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z",
+    "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
 }
 
 
@@ -47,9 +50,15 @@ def commit(tmp, subject, files):
         p = pathlib.Path(tmp) / rel
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(text)
-    subprocess.run(["git", "-C", tmp, "add", "-A"], check=True, capture_output=True, env=ENV)
-    subprocess.run(["git", "-C", tmp, "commit", "-q", "-m", subject],
-                   check=True, capture_output=True, env=ENV)
+    subprocess.run(
+        ["git", "-C", tmp, "add", "-A"], check=True, capture_output=True, env=ENV
+    )
+    subprocess.run(
+        ["git", "-C", tmp, "commit", "-q", "-m", subject],
+        check=True,
+        capture_output=True,
+        env=ENV,
+    )
     return window.git(["rev-parse", "HEAD"], tmp).strip()
 
 
@@ -73,8 +82,12 @@ class FakeDocs:
         out = {}
         for name, (kind, file, start, end) in self._pages.get(page, {}).items():
             out[name] = {
-                "kind": kind, "file": file, "start": start, "end": end,
-                "commit": self._commit, "url": f"{self.base}/{page}#{name}",
+                "kind": kind,
+                "file": file,
+                "start": start,
+                "end": end,
+                "commit": self._commit,
+                "url": f"{self.base}/{page}#{name}",
             }
         return out
 
@@ -97,7 +110,9 @@ end EpsilonEridani
 
 def repo_with_two_prs(tmp):
     """Root, then a PR adding `alpha`, then a PR adding `beta` to the same file."""
-    subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True
+    )
     root = commit(tmp, "init", {"README.md": "x"})
     first = commit(tmp, "feat: alpha (#101)", {"EpsilonEridani/A.lean": ALPHA})
     second = commit(tmp, "feat: beta (#102)", {"EpsilonEridani/A.lean": ALPHA_AND_BETA})
@@ -124,7 +139,10 @@ def test_names_kinds_and_urls_come_from_the_documentation():
         by = {d["name"]: d for d in got["declarations"]}
         assert set(by) == {"EpsilonEridani.alpha", "EpsilonEridani.beta"}, sorted(by)
         assert by["EpsilonEridani.alpha"]["kind"] == "theorem"
-        assert by["EpsilonEridani.alpha"]["url"] == "https://docs.example/docs/EpsilonEridani/A.html#EpsilonEridani.alpha"
+        assert (
+            by["EpsilonEridani.alpha"]["url"]
+            == "https://docs.example/docs/EpsilonEridani/A.html#EpsilonEridani.alpha"
+        )
 
 
 def test_blame_attributes_each_declaration_to_its_pull_request():
@@ -160,16 +178,26 @@ def test_docstrings_are_read_from_a_known_line():
         root, first, second = repo_with_two_prs(tmp)
         got = facts.collect(tmp, root, second, docs=docs_for(second))
         by = {d["name"]: d for d in got["declarations"]}
-        assert by["EpsilonEridani.alpha"]["doc"] == "**Alpha's theorem.** It states alpha.", by
+        assert (
+            by["EpsilonEridani.alpha"]["doc"] == "**Alpha's theorem.** It states alpha."
+        ), by
         assert by["EpsilonEridani.beta"]["doc"] == "**Beta's theorem.** It states beta."
 
 
 def test_a_declaration_with_no_docstring_reports_none():
     with tempfile.TemporaryDirectory() as tmp:
-        subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True
+        )
         root = commit(tmp, "init", {"README.md": "x"})
-        head = commit(tmp, "feat: bare (#7)", {"EpsilonEridani/A.lean": "theorem bare : True := trivial\n"})
-        docs = FakeDocs({PAGE: {"bare": ("theorem", "EpsilonEridani/A.lean", 1, 1)}}, head)
+        head = commit(
+            tmp,
+            "feat: bare (#7)",
+            {"EpsilonEridani/A.lean": "theorem bare : True := trivial\n"},
+        )
+        docs = FakeDocs(
+            {PAGE: {"bare": ("theorem", "EpsilonEridani/A.lean", 1, 1)}}, head
+        )
         got = facts.collect(tmp, root, head, docs=docs)
         assert got["declarations"][0]["doc"] == ""
 
@@ -188,17 +216,25 @@ def test_an_undocumented_module_contributes_nothing():
 def test_revised_declarations_are_marked_not_new():
     """A declaration whose lines are only partly from this window existed before and was revised."""
     with tempfile.TemporaryDirectory() as tmp:
-        subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True
+        )
         root = commit(tmp, "init", {"README.md": "x"})
         before = "/-- Doc. -/\ntheorem t : True := by\n  trivial\n"
         first = commit(tmp, "feat: add (#1)", {"EpsilonEridani/A.lean": before})
         after = "/-- Doc. -/\ntheorem t : True := by\n  exact trivial\n"
         second = commit(tmp, "refactor: tweak (#2)", {"EpsilonEridani/A.lean": after})
-        docs = FakeDocs({PAGE: {"t": ("theorem", "EpsilonEridani/A.lean", 2, 3)}}, second)
+        docs = FakeDocs(
+            {PAGE: {"t": ("theorem", "EpsilonEridani/A.lean", 2, 3)}}, second
+        )
         got = facts.collect(tmp, root, second, docs=docs)
-        assert got["declarations"][0]["new"] is True, "written entirely within the window"
+        assert got["declarations"][0]["new"] is True, (
+            "written entirely within the window"
+        )
         got2 = facts.collect(tmp, first, second, docs=docs)
-        assert got2["declarations"][0]["new"] is False, "only the body line is from this window"
+        assert got2["declarations"][0]["new"] is False, (
+            "only the body line is from this window"
+        )
 
 
 def test_documentation_behind_the_window_end_anchors_to_the_documented_commit():
@@ -206,7 +242,11 @@ def test_documentation_behind_the_window_end_anchors_to_the_documented_commit():
     would produce dead links for anything newer, so the documented commit wins and is reported."""
     with tempfile.TemporaryDirectory() as tmp:
         root, first, second = repo_with_two_prs(tmp)
-        third = commit(tmp, "feat: later (#103)", {"EpsilonEridani/B.lean": "theorem later : True := trivial\n"})
+        third = commit(
+            tmp,
+            "feat: later (#103)",
+            {"EpsilonEridani/B.lean": "theorem later : True := trivial\n"},
+        )
         # The documentation is still at `second`.
         got = facts.collect(tmp, root, third, docs=docs_for(second))
         assert got["docs_sha"] == second
@@ -227,8 +267,10 @@ def test_documentation_from_a_foreign_history_is_refused():
 
 
 def test_module_page_for_file():
-    assert facts.module_page_for_file("EpsilonEridani/Analysis/Fredholm/Basic.lean") == \
-        "EpsilonEridani/Analysis/Fredholm/Basic.html"
+    assert (
+        facts.module_page_for_file("EpsilonEridani/Analysis/Fredholm/Basic.lean")
+        == "EpsilonEridani/Analysis/Fredholm/Basic.html"
+    )
     assert facts.module_page_for_file("scripts/x.py") is None
     assert facts.module_page_for_file("EpsilonEridani/A.txt") is None
 
@@ -244,11 +286,21 @@ def test_cli_facts_passes_the_plan_filter():
         plan_file.write_text(json.dumps(plan))
         # Point the reader at a stub by monkeypatching the module the CLI imports.
         import progress.docs as docs_mod
+
         real = docs_mod.Docs
         docs_mod.Docs = lambda *a, **k: docs_for(second)
         try:
-            rc = cli.main(["facts", "--plan", str(plan_file), "--code-dir", tmp,
-                           "--out", str(out_file)])
+            rc = cli.main(
+                [
+                    "facts",
+                    "--plan",
+                    str(plan_file),
+                    "--code-dir",
+                    tmp,
+                    "--out",
+                    str(out_file),
+                ]
+            )
         finally:
             docs_mod.Docs = real
         assert rc == 0, rc

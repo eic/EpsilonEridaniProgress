@@ -47,7 +47,9 @@ def git(args, repo_dir):
         text=True,
     )
     if proc.returncode != 0:
-        raise GitError(f"git {' '.join(args)} failed: {proc.stderr.strip() or proc.returncode}")
+        raise GitError(
+            f"git {' '.join(args)} failed: {proc.stderr.strip() or proc.returncode}"
+        )
     return proc.stdout
 
 
@@ -86,7 +88,15 @@ def is_ancestor(repo_dir, maybe_ancestor, descendant):
     from it would silently produce nonsense.
     """
     proc = subprocess.run(
-        ["git", "-C", str(repo_dir), "merge-base", "--is-ancestor", maybe_ancestor, descendant],
+        [
+            "git",
+            "-C",
+            str(repo_dir),
+            "merge-base",
+            "--is-ancestor",
+            maybe_ancestor,
+            descendant,
+        ],
         capture_output=True,
         text=True,
     )
@@ -105,10 +115,13 @@ def has_commit(repo_dir, sha):
     here aborts a whole plan. A pull request that merged after the last fetch is exactly that case,
     and it is ordinary rather than exceptional.
     """
-    return subprocess.run(
-        ["git", "-C", str(repo_dir), "cat-file", "-e", f"{sha}^{{commit}}"],
-        capture_output=True,
-    ).returncode == 0
+    return (
+        subprocess.run(
+            ["git", "-C", str(repo_dir), "cat-file", "-e", f"{sha}^{{commit}}"],
+            capture_output=True,
+        ).returncode
+        == 0
+    )
 
 
 def window_prs(repo_dir, from_sha, to_sha):
@@ -122,7 +135,9 @@ def window_prs(repo_dir, from_sha, to_sha):
             f"{from_sha[:7]} is not an ancestor of {to_sha[:7]}; the cursor does not belong to "
             f"this history (rewritten branch, or a cursor from another repository)"
         )
-    log = git(["log", "--first-parent", "--format=%s", f"{from_sha}..{to_sha}"], repo_dir)
+    log = git(
+        ["log", "--first-parent", "--format=%s", f"{from_sha}..{to_sha}"], repo_dir
+    )
     return pr_numbers_from_log(log)
 
 
@@ -171,7 +186,10 @@ def earliest_merged(repo_dir, pr_numbers, ref=CODE_REF):
         sha, _, subject = line.partition(" ")
         number = pr_number_of_subject(subject)
         if number in wanted:
-            found = (number, sha)  # keep overwriting: git emits newest first, so the last is oldest
+            found = (
+                number,
+                sha,
+            )  # keep overwriting: git emits newest first, so the last is oldest
     return found
 
 

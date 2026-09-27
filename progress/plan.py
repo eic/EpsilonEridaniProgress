@@ -82,8 +82,10 @@ def discover_areas(roadmap_dir):
     inner = root / AREAS_DIR
     base = inner if inner.is_dir() else root
     found = {}
-    for parent, prefix in ((base, AREAS_DIR if base is inner else ""),
-                           (root / COMPLETED_DIR, COMPLETED_DIR)):
+    for parent, prefix in (
+        (base, AREAS_DIR if base is inner else ""),
+        (root / COMPLETED_DIR, COMPLETED_DIR),
+    ):
         if not parent.is_dir():
             continue
         for child in sorted(parent.iterdir()):
@@ -99,7 +101,9 @@ def read_area_layers(roadmap_dir, rel_dir):
     assessment it produces is bound to the README it was made against rather than to whatever
     README is current when someone reads it.
     """
-    text = (pathlib.Path(roadmap_dir) / rel_dir / "README.md").read_text(encoding="utf-8")
+    text = (pathlib.Path(roadmap_dir) / rel_dir / "README.md").read_text(
+        encoding="utf-8"
+    )
     return layers_mod.headings(text), layers_mod.readme_sha(text)
 
 
@@ -116,17 +120,26 @@ def read_sub_roadmaps(roadmap_dir, area, rel_dir):
     base = pathlib.Path(roadmap_dir) / rel_dir
     out = []
     for child in sorted(p for p in base.iterdir() if p.is_dir()):
-        if not ((child / "README.md").is_file() and (child / "Suggested.lean").is_file()):
+        if not (
+            (child / "README.md").is_file() and (child / "Suggested.lean").is_file()
+        ):
             continue
         if not re.match(r"\A[A-Za-z0-9]+\Z", child.name):
-            print(f"{area}/{child.name}: not an alphanumeric directory name; its layers stay unassessed")
+            print(
+                f"{area}/{child.name}: not an alphanumeric directory name; its layers stay unassessed"
+            )
             continue
         text = (child / "README.md").read_text(encoding="utf-8")
         found = layers_mod.headings(text)
         if found:
-            out.append({"roadmap": files.sub_roadmap_id(area, child.name),
-                        "readme": f"{rel_dir}/{child.name}/README.md",
-                        "readme_sha": layers_mod.readme_sha(text), "layers": found})
+            out.append(
+                {
+                    "roadmap": files.sub_roadmap_id(area, child.name),
+                    "readme": f"{rel_dir}/{child.name}/README.md",
+                    "readme_sha": layers_mod.readme_sha(text),
+                    "layers": found,
+                }
+            )
     return out
 
 
@@ -203,13 +216,23 @@ def unaccounted_prs(repo_dir, area_prs, ref=CODE_REF):
     seen.discard(None)
     out = []
     for number in sorted(set(area_prs) - seen):
-        raw = gh.gh(["api", f"repos/{gh.CODE_REPO}/pulls/{int(number)}", "--jq",
-                     '.merge_commit_sha // ""']).strip()
+        raw = gh.gh(
+            [
+                "api",
+                f"repos/{gh.CODE_REPO}/pulls/{int(number)}",
+                "--jq",
+                '.merge_commit_sha // ""',
+            ]
+        ).strip()
         # `has_commit` first: a pull request that merged since the last fetch has a merge commit this
         # checkout has never seen, and asking `merge-base` about it fails rather than answering "no" --
         # which aborted the entire plan, for every area, over one freshly merged pull request. Absent
         # from the checkout means absent from this history, which is the benign case documented above.
-        if raw and window.has_commit(repo_dir, raw) and window.is_ancestor(repo_dir, raw, ref):
+        if (
+            raw
+            and window.has_commit(repo_dir, raw)
+            and window.is_ancestor(repo_dir, raw, ref)
+        ):
             out.append(number)
     return out
 
@@ -259,7 +282,7 @@ def _own_login():
 
 
 def _pr_owner(pr):
-    return ((pr.get("headRepositoryOwner") or {}).get("login") or "")
+    return (pr.get("headRepositoryOwner") or {}).get("login") or ""
 
 
 def in_flight_areas(open_prs, now=None, stale_hours=STALE_PR_HOURS, owners=None):
@@ -361,7 +384,9 @@ def build_plan(
     # links describe one and the same state.
     docs_sha = docs_source_commit()
     if docs_sha is None:
-        raise NotDue("the published documentation could not be read, so no window can be closed")
+        raise NotDue(
+            "the published documentation could not be read, so no window can be closed"
+        )
     tip = window.head_sha(code_dir, ref=ref)
     if docs_sha != tip and not window.is_ancestor(code_dir, docs_sha, tip):
         raise NotDue(
@@ -493,9 +518,7 @@ def build_plan(
         "progress_path": f"{best['rel_dir']}/{PROGRESS_NAME}",
         "from_date": window.commit_date(code_dir, best["from_sha"]),
         "to_date": window.commit_date(code_dir, to_sha),
-        "runner_up": [
-            {"area": c["area"], "prs": len(c["prs"])} for c in ranked[1:4]
-        ],
+        "runner_up": [{"area": c["area"], "prs": len(c["prs"])} for c in ranked[1:4]],
     }
 
 

@@ -60,21 +60,32 @@ def test_pr_numbers_from_log_dedupes_and_keeps_order():
 
 def make_repo(tmp, subjects):
     """A repo whose mainline is one commit per subject, oldest first. Returns [sha] aligned to it."""
-    subprocess.run(["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "init", "-q", "-b", "main", tmp], check=True, capture_output=True
+    )
     # Inherit the real environment (git must stay on PATH) and only pin identity and dates, so
     # commit SHAs are reproducible without breaking the tool lookup.
     env = {
         **os.environ,
-        "GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@e",
-        "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@e",
-        "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z", "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
+        "GIT_AUTHOR_NAME": "T",
+        "GIT_AUTHOR_EMAIL": "t@e",
+        "GIT_COMMITTER_NAME": "T",
+        "GIT_COMMITTER_EMAIL": "t@e",
+        "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z",
+        "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
     }
     shas = []
     for i, subject in enumerate(subjects):
         (pathlib.Path(tmp) / f"f{i}").write_text(str(i))
-        subprocess.run(["git", "-C", tmp, "add", "-A"], check=True, capture_output=True, env=env)
-        subprocess.run(["git", "-C", tmp, "commit", "-q", "-m", subject],
-                       check=True, capture_output=True, env=env)
+        subprocess.run(
+            ["git", "-C", tmp, "add", "-A"], check=True, capture_output=True, env=env
+        )
+        subprocess.run(
+            ["git", "-C", tmp, "commit", "-q", "-m", subject],
+            check=True,
+            capture_output=True,
+            env=env,
+        )
         shas.append(window.git(["rev-parse", "HEAD"], tmp).strip())
     return shas
 
@@ -109,7 +120,11 @@ def test_ancestry_is_asserted():
         assert window.is_ancestor(tmp, shas[0], shas[1]) is True
         assert window.is_ancestor(tmp, shas[1], shas[0]) is False
         # A cursor that is not an ancestor means rewritten history or a foreign cursor. Refuse.
-        raises(window.GitError, lambda: window.window_prs(tmp, shas[1], shas[0]), "not an ancestor")
+        raises(
+            window.GitError,
+            lambda: window.window_prs(tmp, shas[1], shas[0]),
+            "not an ancestor",
+        )
 
 
 def test_consecutive_windows_tile_with_no_gap_or_overlap():
@@ -137,7 +152,9 @@ NOW = datetime.datetime(2026, 7, 30, 12, 0, tzinfo=datetime.timezone.utc)
 
 
 def test_cadence_never_updated():
-    reason = plan.check_cadence([("2026-07-30T11:00:00Z", "feat: something else (#1)")], now=NOW)
+    reason = plan.check_cadence(
+        [("2026-07-30T11:00:00Z", "feat: something else (#1)")], now=NOW
+    )
     assert "ever" in reason, reason
 
 
@@ -172,11 +189,11 @@ def test_discover_areas_matches_canonical_rule():
         for rel in [
             "EpsilonEridaniRoadmaps/PDE",
             "EpsilonEridaniRoadmaps/ContourIntegration",
-            "EpsilonEridaniRoadmaps/OneParameterSemigroups",     # README only, no Suggested.lean
+            "EpsilonEridaniRoadmaps/OneParameterSemigroups",  # README only, no Suggested.lean
             "EpsilonEridaniRoadmaps/RepresentationTheory",
-            "EpsilonEridaniRoadmaps/RepresentationTheory/RootSystems",   # nested: not a top-level area
+            "EpsilonEridaniRoadmaps/RepresentationTheory/RootSystems",  # nested: not a top-level area
             "EpsilonEridaniRoadmaps/GeometricTopology",
-            "EpsilonEridaniRoadmaps/GeometricTopology/references",       # has a README but is not an area
+            "EpsilonEridaniRoadmaps/GeometricTopology/references",  # has a README but is not an area
             "Completed/EffectiveBounds",
         ]:
             (root / rel).mkdir(parents=True)
@@ -187,12 +204,18 @@ def test_discover_areas_matches_canonical_rule():
 
         areas = plan.discover_areas(root)
         assert set(areas) == {
-            "PDE", "ContourIntegration", "OneParameterSemigroups", "RepresentationTheory",
-            "GeometricTopology", "EffectiveBounds",
+            "PDE",
+            "ContourIntegration",
+            "OneParameterSemigroups",
+            "RepresentationTheory",
+            "GeometricTopology",
+            "EffectiveBounds",
         }, sorted(areas)
         assert areas["PDE"] == "EpsilonEridaniRoadmaps/PDE"
         assert areas["EffectiveBounds"] == "Completed/EffectiveBounds"
-        assert "RootSystems" not in areas, "nested sub-roadmaps are not separate labelled areas"
+        assert "RootSystems" not in areas, (
+            "nested sub-roadmaps are not separate labelled areas"
+        )
         assert "references" not in areas
 
 
@@ -226,12 +249,12 @@ def test_area_window_is_git_range_intersect_label_set():
 def test_already_reported_prs_are_excluded():
     """A relabel after a section landed must not double-report. The section header records the PR
     numbers, and `reported_prs` is the authority."""
-    log = files.new_progress_file("PDE") + files.render_section("PDE", "a" * 40, "b" * 40, [1, 2],
-                                                                "w", "x")
+    log = files.new_progress_file("PDE") + files.render_section(
+        "PDE", "a" * 40, "b" * 40, [1, 2], "w", "x"
+    )
     assert files.reported_prs(log) == {1, 2}
     fresh = [n for n in [3, 2, 1] if n not in files.reported_prs(log)]
     assert fresh == [3], fresh
-
 
 
 def test_earliest_merged_is_by_merge_order_not_by_number():
@@ -242,17 +265,37 @@ def test_earliest_merged_is_by_merge_order_not_by_number():
     only move forward, so #101 becomes unreportable for good. Two of the fourteen live roadmaps had
     this shape (RepresentationTheory #1227 vs #1228, OneParameterSemigroups #273 vs #276).
     """
-    import tempfile, subprocess, os
+    import tempfile
+    import subprocess
+    import os
+
     with tempfile.TemporaryDirectory() as d:
+
         def run(*args):
             subprocess.run(args, cwd=d, check=True, capture_output=True)
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
-        for subject in ("root", "feat: later-numbered merges first (#101)",
-                        "feat: lower-numbered merges second (#100)"):
-            subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", subject],
-                           cwd=d, check=True, capture_output=True, env=env)
+
+        env = dict(
+            os.environ,
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@e",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@e",
+        )
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True
+        )
+        for subject in (
+            "root",
+            "feat: later-numbered merges first (#101)",
+            "feat: lower-numbered merges second (#100)",
+        ):
+            subprocess.run(
+                ["git", "commit", "-q", "--allow-empty", "-m", subject],
+                cwd=d,
+                check=True,
+                capture_output=True,
+                env=env,
+            )
         got = window.earliest_merged(d, [100, 101], ref="main")
         assert got is not None and got[0] == 101, got
         # And the cursor derived from it is the commit BEFORE #101, so #101 is inside the window.
@@ -262,14 +305,29 @@ def test_earliest_merged_is_by_merge_order_not_by_number():
 
 
 def test_earliest_merged_ignores_unlabelled_pull_requests():
-    import tempfile, subprocess, os
+    import tempfile
+    import subprocess
+    import os
+
     with tempfile.TemporaryDirectory() as d:
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
+        env = dict(
+            os.environ,
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@e",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@e",
+        )
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True
+        )
         for subject in ("root", "chore: unrelated (#7)", "feat: ours (#9)"):
-            subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", subject],
-                           cwd=d, check=True, capture_output=True, env=env)
+            subprocess.run(
+                ["git", "commit", "-q", "--allow-empty", "-m", subject],
+                cwd=d,
+                check=True,
+                capture_output=True,
+                env=env,
+            )
         assert window.earliest_merged(d, [9], ref="main")[0] == 9
         assert window.earliest_merged(d, [], ref="main") is None
         assert window.earliest_merged(d, [12345], ref="main") is None
@@ -282,25 +340,43 @@ def test_a_labelled_pr_with_no_number_in_its_subject_fails_closed():
     LATER merge and skip it, permanently. Two implementations agreeing does not catch this -- they
     share the omission, which is how three earlier versions of this check passed review while wrong.
     """
-    import os, subprocess, tempfile
+    import os
+    import subprocess
+    import tempfile
     from progress import gh as gh_mod, plan as plan_mod
+
     with tempfile.TemporaryDirectory() as d:
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
+        env = dict(
+            os.environ,
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@e",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@e",
+        )
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True
+        )
         for subject in ("root", "feat: no number here at all", "feat: later one (#20)"):
-            subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", subject],
-                           cwd=d, check=True, capture_output=True, env=env)
+            subprocess.run(
+                ["git", "commit", "-q", "--allow-empty", "-m", subject],
+                cwd=d,
+                check=True,
+                capture_output=True,
+                env=env,
+            )
         # #10 merged as the numberless commit; resolve it the way the real check does.
-        numberless = subprocess.run(["git", "rev-parse", "HEAD~1"], cwd=d,
-                                    capture_output=True, text=True).stdout.strip()
+        numberless = subprocess.run(
+            ["git", "rev-parse", "HEAD~1"], cwd=d, capture_output=True, text=True
+        ).stdout.strip()
         orig = gh_mod.gh
         gh_mod.gh = lambda args, **kw: numberless + "\n"
         try:
             assert plan_mod.unaccounted_prs(d, [10, 20], ref="main") == [10]
-            raises(window.GitError,
-                   lambda: plan_mod.bootstrap_from_sha(d, "PDE", [10, 20], ref="main"),
-                   "no pull request number")
+            raises(
+                window.GitError,
+                lambda: plan_mod.bootstrap_from_sha(d, "PDE", [10, 20], ref="main"),
+                "no pull request number",
+            )
         finally:
             gh_mod.gh = orig
 
@@ -309,19 +385,36 @@ def test_a_merge_commit_this_checkout_never_fetched_is_not_fatal():
     """Hit for real while verifying this change: a pull request merged between the checkout's last
     fetch and the plan. `merge-base` FAILS on a commit it has never seen rather than answering "no",
     and that failure aborted the whole plan — every area — over one freshly merged pull request."""
-    import os, subprocess, tempfile
+    import os
+    import subprocess
+    import tempfile
     from progress import gh as gh_mod, plan as plan_mod
+
     with tempfile.TemporaryDirectory() as d:
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
+        env = dict(
+            os.environ,
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@e",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@e",
+        )
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True
+        )
         for subject in ("root", "feat: ours (#5)"):
-            subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", subject],
-                           cwd=d, check=True, capture_output=True, env=env)
+            subprocess.run(
+                ["git", "commit", "-q", "--allow-empty", "-m", subject],
+                cwd=d,
+                check=True,
+                capture_output=True,
+                env=env,
+            )
         assert not window.has_commit(d, "0" * 40)
         assert window.has_commit(d, window.head_sha(d, ref="main"))
         orig = gh_mod.gh
-        gh_mod.gh = lambda args, **kw: "0" * 40 + "\n"  # GitHub names a commit we have not fetched
+        gh_mod.gh = lambda args, **kw: (
+            "0" * 40 + "\n"
+        )  # GitHub names a commit we have not fetched
         try:
             assert plan_mod.unaccounted_prs(d, [5, 99], ref="main") == []
         finally:
@@ -330,17 +423,32 @@ def test_a_merge_commit_this_checkout_never_fetched_is_not_fatal():
 
 def test_a_labelled_pr_merged_after_the_tip_is_not_flagged():
     """Benign: it is not in this history yet, and a later window will cover it."""
-    import os, subprocess, tempfile
+    import os
+    import subprocess
+    import tempfile
     from progress import gh as gh_mod, plan as plan_mod
+
     with tempfile.TemporaryDirectory() as d:
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
-                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
+        env = dict(
+            os.environ,
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@e",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@e",
+        )
+        subprocess.run(
+            ["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True
+        )
         for subject in ("root", "feat: ours (#5)"):
-            subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", subject],
-                           cwd=d, check=True, capture_output=True, env=env)
+            subprocess.run(
+                ["git", "commit", "-q", "--allow-empty", "-m", subject],
+                cwd=d,
+                check=True,
+                capture_output=True,
+                env=env,
+            )
         orig = gh_mod.gh
-        gh_mod.gh = lambda args, **kw: "\n"        # no merge commit we can see
+        gh_mod.gh = lambda args, **kw: "\n"  # no merge commit we can see
         try:
             assert plan_mod.unaccounted_prs(d, [5, 99], ref="main") == []
         finally:
@@ -363,15 +471,25 @@ def make_roadmap(root, areas):
 def plan_against(code_dir, roadmap_dir, docs_sha, area_prs, **kw):
     """`build_plan` with the network stubbed: a fixed documented build and fixed area labels."""
     from progress import gh as gh_mod, plan as plan_mod
+
     orig_docs, orig_labels = plan_mod.docs_source_commit, gh_mod.merged_prs_for_area
     plan_mod.docs_source_commit = lambda: docs_sha
     gh_mod.merged_prs_for_area = lambda area, **_: list(area_prs.get(area, []))
     try:
         return plan_mod.build_plan(
-            roadmap_dir, code_dir,
-            commits=[{"commit": {"committedDate": "2026-01-01T00:00:00Z"},
-                      "messageHeadline": "progress: X (2026-01-01)"}],
-            open_prs=[], ref="main", min_prs=1, **kw)
+            roadmap_dir,
+            code_dir,
+            commits=[
+                {
+                    "commit": {"committedDate": "2026-01-01T00:00:00Z"},
+                    "messageHeadline": "progress: X (2026-01-01)",
+                }
+            ],
+            open_prs=[],
+            ref="main",
+            min_prs=1,
+            **kw,
+        )
     finally:
         plan_mod.docs_source_commit, gh_mod.merged_prs_for_area = orig_docs, orig_labels
 
@@ -381,24 +499,38 @@ def test_an_area_newer_than_the_documented_build_is_skipped_not_fatal():
     documentation deploy bootstraps to a cursor ahead of `to_sha`. `window_prs` refuses on that,
     and the exception aborted the WHOLE plan -- so one new roadmap stopped every area's reporting
     until a human read the traceback. The new area waits; the others must still be reportable."""
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
-        shas = make_repo(code, ["init", "old: a (#1)", "old: b (#2)", "later", "new: c (#3)"])
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
+        shas = make_repo(
+            code, ["init", "old: a (#1)", "old: b (#2)", "later", "new: c (#3)"]
+        )
         make_roadmap(roadmap, {"Old": None, "New": None})
         # The documentation was built at shas[2]. New bootstraps to the parent of #3's merge,
         # shas[3], which is newer than that -- exactly the shape a roadmap added this week has.
         got = plan_against(code, roadmap, shas[2], {"Old": [1, 2], "New": [3]})
         assert got["roadmap"] == "Old", got["roadmap"]
         assert got["prs"] == [2, 1], got["prs"]
-        assert any("New" in s and "not published yet" in s for s in got["skipped"]), got["skipped"]
+        assert any("New" in s and "not published yet" in s for s in got["skipped"]), (
+            got["skipped"]
+        )
 
 
 def test_docs_catching_up_reports_the_waiting_area_with_no_history_stranded():
     """The skip must defer an area, not drop it. Once the documentation reaches the commit, the same
     area reports, and its FIRST pull request is inside that first window."""
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
-        shas = make_repo(code, ["init", "old: a (#1)", "old: b (#2)", "later", "new: c (#3)"])
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
+        shas = make_repo(
+            code, ["init", "old: a (#1)", "old: b (#2)", "later", "new: c (#3)"]
+        )
         make_roadmap(roadmap, {"Old": None, "New": None})
-        got = plan_against(code, roadmap, shas[4], {"Old": [1, 2], "New": [3]}, only_area="New")
+        got = plan_against(
+            code, roadmap, shas[4], {"Old": [1, 2], "New": [3]}, only_area="New"
+        )
         assert got["roadmap"] == "New", got["roadmap"]
         assert got["prs"] == [3], got["prs"]
 
@@ -407,35 +539,84 @@ def test_a_recorded_cursor_ahead_of_the_docs_says_so_plainly():
     """A cursor written by an earlier report, now ahead of the published build: the documentation
     rolled back. Skipping is right — a backwards window would be nonsense — but a reader must not be
     told this is the ordinary "not published yet" case."""
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
         shas = make_repo(code, ["init", "a (#1)", "b (#2)", "c (#3)"])
-        make_roadmap(roadmap, {"Old": files.new_progress_file("Old") + files.render_section(
-            "Old", shas[0], shas[3], [1, 2, 3], "2026-01-01", "prose " * 60)})
-        raises(plan.NotDue, lambda: plan_against(code, roadmap, shas[1], {"Old": [1, 2, 3]}),
-               "went backwards")
+        make_roadmap(
+            roadmap,
+            {
+                "Old": files.new_progress_file("Old")
+                + files.render_section(
+                    "Old", shas[0], shas[3], [1, 2, 3], "2026-01-01", "prose " * 60
+                )
+            },
+        )
+        raises(
+            plan.NotDue,
+            lambda: plan_against(code, roadmap, shas[1], {"Old": [1, 2, 3]}),
+            "went backwards",
+        )
 
 
 def test_a_cursor_in_no_history_at_all_is_still_refused():
     """The skip is narrow on purpose. A cursor that is in neither the documented history nor the
     branch is the rewritten-branch case, and staying loud there is the whole point of the check."""
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         # A commit off the mainline: reachable as an object, on no branch. That is what a cursor
         # written before a rewrite looks like, and it is an ancestor of nothing we report from.
-        subprocess.run(["git", "-C", code, "checkout", "-q", "--detach", shas[0]],
-                       check=True, capture_output=True)
-        subprocess.run(["git", "-C", code, "commit", "-q", "--allow-empty", "-m", "rewritten (#9)"],
-                       check=True, capture_output=True,
-                       env={**os.environ, "GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@e",
-                            "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@e"})
+        subprocess.run(
+            ["git", "-C", code, "checkout", "-q", "--detach", shas[0]],
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                code,
+                "commit",
+                "-q",
+                "--allow-empty",
+                "-m",
+                "rewritten (#9)",
+            ],
+            check=True,
+            capture_output=True,
+            env={
+                **os.environ,
+                "GIT_AUTHOR_NAME": "T",
+                "GIT_AUTHOR_EMAIL": "t@e",
+                "GIT_COMMITTER_NAME": "T",
+                "GIT_COMMITTER_EMAIL": "t@e",
+            },
+        )
         orphan = window.git(["rev-parse", "HEAD"], code).strip()
-        subprocess.run(["git", "-C", code, "checkout", "-q", "main"], check=True, capture_output=True)
+        subprocess.run(
+            ["git", "-C", code, "checkout", "-q", "main"],
+            check=True,
+            capture_output=True,
+        )
         # The cursor is the newest section's `to_sha`, and this one names history we cannot reach.
-        make_roadmap(roadmap, {"Old": files.new_progress_file("Old") + files.render_section(
-            "Old", shas[0], orphan, [1], "2026-01-01", "prose " * 60)})
-        raises(window.GitError,
-               lambda: plan_against(code, roadmap, shas[2], {"Old": [1, 2]}),
-               "not an ancestor")
+        make_roadmap(
+            roadmap,
+            {
+                "Old": files.new_progress_file("Old")
+                + files.render_section(
+                    "Old", shas[0], orphan, [1], "2026-01-01", "prose " * 60
+                )
+            },
+        )
+        raises(
+            window.GitError,
+            lambda: plan_against(code, roadmap, shas[2], {"Old": [1, 2]}),
+            "not an ancestor",
+        )
 
 
 # ----- the layers the plan hands the model ------------------------------------------------------
@@ -445,15 +626,25 @@ def test_the_plan_records_the_selected_areas_layers_and_readme_hash_exactly():
     """The inventory `apply` binds the verdicts to: the README's layer headings in order, with ids
     and 1-based lines, and a hash of the README's text."""
     import hashlib
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
+
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         make_roadmap(roadmap, {"Curves": None})
-        readme = ("# Curves\n\n## Layers\n\n### Layer 0: the group law (Silverman III.2)\ntext\n"
-                  "### Layer 1: isogenies — the dual\n")
-        (pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "README.md").write_text(readme, encoding="utf-8")
+        readme = (
+            "# Curves\n\n## Layers\n\n### Layer 0: the group law (Silverman III.2)\ntext\n"
+            "### Layer 1: isogenies — the dual\n"
+        )
+        (
+            pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "README.md"
+        ).write_text(readme, encoding="utf-8")
         got = plan_against(code, roadmap, shas[2], {"Curves": [1, 2]})
-        assert got["layers"] == [{"id": "Layer 0", "title": "Layer 0: the group law", "line": 5},
-                                 {"id": "Layer 1", "title": "Layer 1: isogenies — the dual", "line": 7}], got["layers"]
+        assert got["layers"] == [
+            {"id": "Layer 0", "title": "Layer 0: the group law", "line": 5},
+            {"id": "Layer 1", "title": "Layer 1: isogenies — the dual", "line": 7},
+        ], got["layers"]
         assert got["readme_sha"] == hashlib.sha256(readme.encode("utf-8")).hexdigest()
 
 
@@ -463,50 +654,81 @@ def test_an_umbrella_areas_sub_roadmaps_are_assessed_each_against_its_own_readme
     `Area/Child` id. A directory without `Suggested.lean` (a `references/` folder) is not one, and
     a sub-roadmap with no layer headings has nothing to assess."""
     import hashlib
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
+
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         make_roadmap(roadmap, {"Umbrella": None})
         base = pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Umbrella"
-        index = ("# Umbrella\n\n## The roadmaps\n\n- [Spin](SpinRepresentations/README.md)\n"
-                 "- [Roots](RootSystems/README.md)\n")
+        index = (
+            "# Umbrella\n\n## The roadmaps\n\n- [Spin](SpinRepresentations/README.md)\n"
+            "- [Roots](RootSystems/README.md)\n"
+        )
         (base / "README.md").write_text(index, encoding="utf-8")
         readmes = {}
-        for child, body in (("SpinRepresentations", "### Layer 0: basics\n### Layer 1: more\n"),
-                            ("RootSystems", "### Layer 0: axioms\n"),
-                            ("Unlayered", "Prose only.\n"),
-                            ("references", "### Layer 9: not a roadmap\n")):
+        for child, body in (
+            ("SpinRepresentations", "### Layer 0: basics\n### Layer 1: more\n"),
+            ("RootSystems", "### Layer 0: axioms\n"),
+            ("Unlayered", "Prose only.\n"),
+            ("references", "### Layer 9: not a roadmap\n"),
+        ):
             (base / child).mkdir()
             readmes[child] = f"# {child}\n\n{body}"
             (base / child / "README.md").write_text(readmes[child], encoding="utf-8")
             if child != "references":
-                (base / child / "Suggested.lean").write_text("-- suggestions\n", encoding="utf-8")
+                (base / child / "Suggested.lean").write_text(
+                    "-- suggestions\n", encoding="utf-8"
+                )
         got = plan_against(code, roadmap, shas[2], {"Umbrella": [1, 2]})
         assert got["roadmap"] == "Umbrella"
         assert got["layers"] == [], got["layers"]
         assert got["readme_sha"] == hashlib.sha256(index.encode("utf-8")).hexdigest()
-        sha = lambda child: hashlib.sha256(readmes[child].encode("utf-8")).hexdigest()
+
+        def sha(child):
+            return hashlib.sha256(readmes[child].encode("utf-8")).hexdigest()
+
         assert got["sub_roadmaps"] == [
-            {"roadmap": "Umbrella/RootSystems", "readme": "EpsilonEridaniRoadmaps/Umbrella/RootSystems/README.md",
-             "readme_sha": sha("RootSystems"),
-             "layers": [{"id": "Layer 0", "title": "Layer 0: axioms", "line": 3}]},
-            {"roadmap": "Umbrella/SpinRepresentations",
-             "readme": "EpsilonEridaniRoadmaps/Umbrella/SpinRepresentations/README.md",
-             "readme_sha": sha("SpinRepresentations"),
-             "layers": [{"id": "Layer 0", "title": "Layer 0: basics", "line": 3},
-                        {"id": "Layer 1", "title": "Layer 1: more", "line": 4}]},
+            {
+                "roadmap": "Umbrella/RootSystems",
+                "readme": "EpsilonEridaniRoadmaps/Umbrella/RootSystems/README.md",
+                "readme_sha": sha("RootSystems"),
+                "layers": [{"id": "Layer 0", "title": "Layer 0: axioms", "line": 3}],
+            },
+            {
+                "roadmap": "Umbrella/SpinRepresentations",
+                "readme": "EpsilonEridaniRoadmaps/Umbrella/SpinRepresentations/README.md",
+                "readme_sha": sha("SpinRepresentations"),
+                "layers": [
+                    {"id": "Layer 0", "title": "Layer 0: basics", "line": 3},
+                    {"id": "Layer 1", "title": "Layer 1: more", "line": 4},
+                ],
+            },
         ], got["sub_roadmaps"]
         # The children are not areas of their own: labelled areas are top-level only.
-        assert plan.discover_areas(roadmap) == {"Umbrella": "EpsilonEridaniRoadmaps/Umbrella"}
+        assert plan.discover_areas(roadmap) == {
+            "Umbrella": "EpsilonEridaniRoadmaps/Umbrella"
+        }
 
 
 def test_an_ordinary_area_has_no_sub_roadmaps():
-    with tempfile.TemporaryDirectory() as code, tempfile.TemporaryDirectory() as roadmap:
+    with (
+        tempfile.TemporaryDirectory() as code,
+        tempfile.TemporaryDirectory() as roadmap,
+    ):
         shas = make_repo(code, ["init", "a (#1)", "b (#2)"])
         make_roadmap(roadmap, {"Curves": None})
-        refs = pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "references"
+        refs = (
+            pathlib.Path(roadmap) / "EpsilonEridaniRoadmaps" / "Curves" / "references"
+        )
         refs.mkdir()
         (refs / "README.md").write_text("### Layer 0: a paper\n", encoding="utf-8")
-        assert plan_against(code, roadmap, shas[2], {"Curves": [1, 2]})["sub_roadmaps"] == []
+        assert (
+            plan_against(code, roadmap, shas[2], {"Curves": [1, 2]})["sub_roadmaps"]
+            == []
+        )
+
 
 for _name, _fn in sorted(globals().items()):
     if _name.startswith("test_") and callable(_fn):

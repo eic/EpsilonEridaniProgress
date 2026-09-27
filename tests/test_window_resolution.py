@@ -6,14 +6,15 @@ walk the cursor to arbitrary values, announcing every step.
 """
 
 import importlib.util
-import json
 import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-_spec = importlib.util.spec_from_file_location("collect", ROOT / ".github" / "scripts" / "collect.py")
+_spec = importlib.util.spec_from_file_location(
+    "collect", ROOT / ".github" / "scripts" / "collect.py"
+)
 collect = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(collect)
 
@@ -36,14 +37,17 @@ AREA = "PDE"
 FROM = "a" * 40
 TO = "b" * 40
 TIP = "d" * 40  # what `docgen` resolves to; pinned once per run, never re-read
-PROSE = ("Harnack's inequality landed for a nonnegative harmonic function on a planar disc, in both "
-         "the two-sided comparison with the centre value and the pairwise form on a closed subdisc "
-         "with the sharp constant. The supporting mean-value machinery was extracted along the way.")
+PROSE = (
+    "Harnack's inequality landed for a nonnegative harmonic function on a planar disc, in both "
+    "the two-sided comparison with the centre value and the pairwise form on a closed subdisc "
+    "with the sharp constant. The supporting mean-value machinery was extracted along the way."
+)
 
 
 def progress_with(from_sha=FROM, to_sha=TO):
     return files.new_progress_file(AREA) + files.render_section(
-        AREA, from_sha, to_sha, [1, 2, 3], "w", PROSE)
+        AREA, from_sha, to_sha, [1, 2, 3], "w", PROSE
+    )
 
 
 def with_statuses(mapping, tip=TIP):
@@ -143,7 +147,6 @@ def test_the_newest_section_is_the_one_checked():
     finally:
         collect.compare_status, collect.rev_parse = orig_cmp, orig_rev
     assert w["from_sha"] == TO and w["to_sha"] == "c" * 40
-
 
 
 for _name, _fn in sorted(globals().items()):

@@ -45,7 +45,7 @@ def split_section(text):
     m = re.search(r"<!--epsiloneridani-progress:v1 .*?-->[^\n]*\n", text, flags=re.S)
     if not m:
         raise files.FormatError("no section marker found in the appended text")
-    body = text[m.end():]
+    body = text[m.end() :]
     # Drop the `## ...` heading too; Zulip gets a lead-in of our own.
     body = re.sub(r"\A\s*##[^\n]*\n", "", body).strip()
     return headers[0], body
@@ -72,7 +72,13 @@ def unwrap_prose(prose):
     )
 
 
-def render_message(header, prose, roadmap_url=None, status_url=None, roadmap_parent="EpsilonEridaniRoadmaps"):
+def render_message(
+    header,
+    prose,
+    roadmap_url=None,
+    status_url=None,
+    roadmap_parent="EpsilonEridaniRoadmaps",
+):
     """The Zulip message for one section.
 
     Shape follows the review Kim gave Chris's bot: `EpsilonEridani#NNN` linkifiers rather than markdown
@@ -83,7 +89,10 @@ def render_message(header, prose, roadmap_url=None, status_url=None, roadmap_par
     prs = header["prs"]
     body = zulip.sanitize(unwrap_prose(prose))
     if len(body) > MAX_MESSAGE_CHARS:
-        body = body[:MAX_MESSAGE_CHARS].rsplit("\n", 1)[0] + "\n\n(truncated; the full section is in `PROGRESS.md`)"
+        body = (
+            body[:MAX_MESSAGE_CHARS].rsplit("\n", 1)[0]
+            + "\n\n(truncated; the full section is in `PROGRESS.md`)"
+        )
     progress_link = roadmap_url or roadmap_file_url(area, "PROGRESS.md", roadmap_parent)
     status_link = status_url or roadmap_file_url(area, "STATUS.md", roadmap_parent)
     return (
@@ -108,7 +117,13 @@ def already_posted(client, channel, topic, sid):
     return None
 
 
-def run(section_file, channel=None, topic=None, roadmap_parent="EpsilonEridaniRoadmaps", dry_run=False):
+def run(
+    section_file,
+    channel=None,
+    topic=None,
+    roadmap_parent="EpsilonEridaniRoadmaps",
+    dry_run=False,
+):
     """Post the section in `section_file`. Returns a process exit code.
 
     Raises on a transient failure rather than swallowing it, so the workflow run goes red and a

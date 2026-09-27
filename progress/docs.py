@@ -72,7 +72,9 @@ class Docs:
     def __init__(self, base=DOCS_BASE, cache_dir=None, opener=None, ttl=None):
         self.base = base.rstrip("/")
         self.cache_dir = pathlib.Path(
-            cache_dir or os.environ.get("TAUCETI_DOCS_CACHE") or "/tmp/epsiloneridani-docs-cache"
+            cache_dir
+            or os.environ.get("TAUCETI_DOCS_CACHE")
+            or "/tmp/epsiloneridani-docs-cache"
         )
         self.ttl = DOCS_CACHE_TTL if ttl is None else ttl
         self._opener = opener or self._fetch
@@ -246,7 +248,9 @@ class Docs:
                     self._source_commit = info["commit"]
                     break
             else:
-                raise DocsError(f"no source link found on {module}; cannot date the documentation")
+                raise DocsError(
+                    f"no source link found on {module}; cannot date the documentation"
+                )
         return self._source_commit
 
     def _any_module(self):

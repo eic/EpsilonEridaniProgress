@@ -121,7 +121,9 @@ class FormatError(ValueError):
 
 def _require_sha(value, field):
     if not isinstance(value, str) or not _SHA_RE.match(value):
-        raise FormatError(f"{field} must be a full 40-character lowercase hex SHA, got {value!r}")
+        raise FormatError(
+            f"{field} must be a full 40-character lowercase hex SHA, got {value!r}"
+        )
     return value
 
 
@@ -135,7 +137,9 @@ def _require_keys(obj, allowed, marker):
     extra = sorted(set(obj) - set(allowed))
     if extra:
         raise FormatError(f"{marker} header has unknown field(s): {', '.join(extra)}")
-    missing = sorted(set(allowed) - set(obj) - {"ts"})   # `ts` is display-only and optional
+    missing = sorted(
+        set(allowed) - set(obj) - {"ts"}
+    )  # `ts` is display-only and optional
     if missing:
         raise FormatError(f"{marker} header is missing field(s): {', '.join(missing)}")
     return obj
@@ -164,7 +168,9 @@ def _require_area(value, field):
     # Areas are directory names in the roadmap repo; keep this strict so an area can never
     # contain a path separator and escape its directory.
     if not isinstance(value, str) or not re.match(r"\A[A-Za-z0-9]+\Z", value):
-        raise FormatError(f"{field} must be an alphanumeric roadmap area name, got {value!r}")
+        raise FormatError(
+            f"{field} must be an alphanumeric roadmap area name, got {value!r}"
+        )
     return value
 
 
@@ -182,7 +188,9 @@ def parse_headers(text, marker):
         except json.JSONDecodeError as exc:
             raise FormatError(f"malformed {marker} header JSON: {exc}") from exc
         if not isinstance(obj, dict):
-            raise FormatError(f"{marker} header must be a JSON object, got {type(obj).__name__}")
+            raise FormatError(
+                f"{marker} header must be a JSON object, got {type(obj).__name__}"
+            )
         out.append(obj)
     return out
 
@@ -225,7 +233,9 @@ def require_coverage(obj, area, to_sha, child=None):
     _require_keys(obj, COVERAGE_KEYS, COVERAGE_MARKER)
     roadmap = area if child is None else sub_roadmap_id(area, child)
     if obj.get("roadmap") != roadmap:
-        raise FormatError(f"{COVERAGE_MARKER} header is for {obj.get('roadmap')!r}, expected {roadmap}")
+        raise FormatError(
+            f"{COVERAGE_MARKER} header is for {obj.get('roadmap')!r}, expected {roadmap}"
+        )
     if _require_sha(obj.get("to_sha"), "to_sha") != to_sha:
         raise FormatError(
             f"{COVERAGE_MARKER} header describes {obj['to_sha'][:7]} but the status header "
@@ -233,12 +243,16 @@ def require_coverage(obj, area, to_sha, child=None):
         )
     readme_sha = obj.get("readme_sha")
     if not isinstance(readme_sha, str) or not _HEX64_RE.match(readme_sha):
-        raise FormatError(f"readme_sha must be a 64-character lowercase hex SHA-256, got {readme_sha!r}")
+        raise FormatError(
+            f"readme_sha must be a 64-character lowercase hex SHA-256, got {readme_sha!r}"
+        )
     layers = obj.get("layers")
     if not isinstance(layers, list) or not layers:
         raise FormatError("layers must be a non-empty list")
     if len(layers) > MAX_LAYERS:
-        raise FormatError(f"layers lists {len(layers)} entries; the cap is {MAX_LAYERS}")
+        raise FormatError(
+            f"layers lists {len(layers)} entries; the cap is {MAX_LAYERS}"
+        )
     out, seen = [], set()
     for entry in layers:
         if not isinstance(entry, dict):
@@ -248,12 +262,16 @@ def require_coverage(obj, area, to_sha, child=None):
             raise FormatError(f"layer entry has unknown field(s): {', '.join(extra)}")
         lid, state = entry.get("id"), entry.get("state")
         if not isinstance(lid, str) or not LAYER_ID_RE.match(lid):
-            raise FormatError(f"layer id must be a short label such as 'Layer 3' or 'Lane G', got {lid!r}")
+            raise FormatError(
+                f"layer id must be a short label such as 'Layer 3' or 'Lane G', got {lid!r}"
+            )
         if lid in seen:
             raise FormatError(f"layer {lid!r} appears twice")
         seen.add(lid)
         if state not in LAYER_STATES:
-            raise FormatError(f"layer {lid!r} has state {state!r}; expected one of {', '.join(LAYER_STATES)}")
+            raise FormatError(
+                f"layer {lid!r} has state {state!r}; expected one of {', '.join(LAYER_STATES)}"
+            )
         clean = {"id": lid, "state": state}
         if "remaining" in entry:
             remaining = entry["remaining"]
@@ -264,12 +282,19 @@ def require_coverage(obj, area, to_sha, child=None):
                 )
             clean["remaining"] = remaining
         out.append(clean)
-    return {"roadmap": roadmap, "to_sha": to_sha, "readme_sha": readme_sha, "layers": out}
+    return {
+        "roadmap": roadmap,
+        "to_sha": to_sha,
+        "readme_sha": readme_sha,
+        "layers": out,
+    }
 
 
 def coverage_header(coverage):
     """The one canonical serialisation of a validated coverage payload."""
-    return json.dumps(coverage, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(
+        coverage, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
 
 
 def _require_ts(value):
@@ -290,12 +315,18 @@ def _coverage_lines(area, to_sha, coverage, sub_coverage):
         lines.append(require_coverage(coverage, area, to_sha))
     subs = list(sub_coverage or ())
     if len(subs) > MAX_SUB_ROADMAPS:
-        raise FormatError(f"{len(subs)} sub-roadmap coverage headers; the cap is {MAX_SUB_ROADMAPS}")
+        raise FormatError(
+            f"{len(subs)} sub-roadmap coverage headers; the cap is {MAX_SUB_ROADMAPS}"
+        )
     names = []
     for obj in subs:
-        child = coverage_roadmap(obj.get("roadmap") if isinstance(obj, dict) else None, area)
+        child = coverage_roadmap(
+            obj.get("roadmap") if isinstance(obj, dict) else None, area
+        )
         if child is None:
-            raise FormatError(f"a sub-roadmap coverage header must name {area}/<sub-roadmap>")
+            raise FormatError(
+                f"a sub-roadmap coverage header must name {area}/<sub-roadmap>"
+            )
         lines.append(require_coverage(obj, area, to_sha, child))
         names.append(child)
     if names != sorted(set(names)):
@@ -319,8 +350,11 @@ def status_prefix(area, to_sha, ts, coverage=None, sub_coverage=()):
     headers follow in ascending order of name, likewise part of the prefix.
     """
     header = json.dumps(
-        {"roadmap": _require_area(area, "roadmap"), "to_sha": _require_sha(to_sha, "to_sha"),
-         "ts": _require_ts(ts)},
+        {
+            "roadmap": _require_area(area, "roadmap"),
+            "to_sha": _require_sha(to_sha, "to_sha"),
+            "ts": _require_ts(ts),
+        },
         sort_keys=True,
         separators=(",", ":"),
     )
@@ -356,7 +390,9 @@ def parse_status(text):
     """
     headers = parse_headers(text, STATUS_MARKER)
     if len(headers) != 1:
-        raise FormatError(f"expected exactly one {STATUS_MARKER} header, found {len(headers)}")
+        raise FormatError(
+            f"expected exactly one {STATUS_MARKER} header, found {len(headers)}"
+        )
     h = headers[0]
     _require_keys(h, STATUS_KEYS, STATUS_MARKER)
     out = {
@@ -370,10 +406,14 @@ def parse_status(text):
         child = coverage_roadmap(obj.get("roadmap"), out["roadmap"])
         if child is None:
             if out["coverage"] is not None:
-                raise FormatError(f"more than one {COVERAGE_MARKER} header for {out['roadmap']}")
+                raise FormatError(
+                    f"more than one {COVERAGE_MARKER} header for {out['roadmap']}"
+                )
             out["coverage"] = require_coverage(obj, out["roadmap"], out["to_sha"])
         else:
-            out["sub_coverage"].append(require_coverage(obj, out["roadmap"], out["to_sha"], child))
+            out["sub_coverage"].append(
+                require_coverage(obj, out["roadmap"], out["to_sha"], child)
+            )
     if len(out["sub_coverage"]) > MAX_SUB_ROADMAPS:
         raise FormatError(
             f"{len(out['sub_coverage'])} sub-roadmap coverage headers; the cap is {MAX_SUB_ROADMAPS}"
@@ -474,10 +514,12 @@ def check_append_only(old_text, new_text):
     if not isinstance(old_text, str) or not isinstance(new_text, str):
         raise FormatError("append-only check needs text on both sides")
     if not new_text.startswith(old_text):
-        raise FormatError("PROGRESS.md was modified above the end; only appending is allowed")
+        raise FormatError(
+            "PROGRESS.md was modified above the end; only appending is allowed"
+        )
     if len(new_text) == len(old_text):
         raise FormatError("PROGRESS.md is unchanged; an update must add a section")
-    return new_text[len(old_text):]
+    return new_text[len(old_text) :]
 
 
 def strip_headers(text, marker, count):
@@ -485,7 +527,9 @@ def strip_headers(text, marker, count):
     for the coverage headers, of which a status file may have several."""
     spans = [m.span() for m in _HEADER_RE.finditer(text) if m.group(1) == marker]
     if len(spans) != count:
-        raise FormatError(f"expected exactly {count} {marker} header(s), found {len(spans)}")
+        raise FormatError(
+            f"expected exactly {count} {marker} header(s), found {len(spans)}"
+        )
     for start, end in reversed(spans):
         text = text[:start] + text[end:]
     return text
@@ -499,8 +543,11 @@ def strip_one_header(text, marker):
     through untouched -- a string that is not the parsed header at all. Removing the one canonical
     span and then scanning the remainder with NO exemptions is exact.
     """
-    spans = [m.span() for m in _HEADER_RE.finditer(text)
-             if _HEADER_RE.match(text, m.start()).group(1) == marker]
+    spans = [
+        m.span()
+        for m in _HEADER_RE.finditer(text)
+        if _HEADER_RE.match(text, m.start()).group(1) == marker
+    ]
     if len(spans) != 1:
         raise FormatError(f"expected exactly one {marker} header, found {len(spans)}")
     start, end = spans[0]
@@ -516,7 +563,9 @@ def check_no_reserved_markers(body):
     """
     m = RESERVED_MARKER_RE.search(body)
     if m:
-        raise FormatError(f"prose contains a reserved marker at offset {m.start()}: {m.group(0)!r}")
+        raise FormatError(
+            f"prose contains a reserved marker at offset {m.start()}: {m.group(0)!r}"
+        )
 
 
 def check_status_shape(text, area, to_sha, ts, coverage=None, sub_coverage=()):
@@ -542,7 +591,7 @@ def check_status_shape(text, area, to_sha, ts, coverage=None, sub_coverage=()):
             "STATUS.md does not begin with the canonical header, heading and disclaimer, in that "
             "order and unmodified"
         )
-    return text[len(expected):]
+    return text[len(expected) :]
 
 
 def check_section_shape(added, area, from_sha, to_sha):
@@ -562,7 +611,7 @@ def check_section_shape(added, area, from_sha, to_sha):
             f"the new section must begin with its epsiloneridani-progress:v1 header followed by a "
             f"'## {area}: ... (`{from_sha[:7]}` to `{to_sha[:7]}`)' heading"
         )
-    return added[m.end():]
+    return added[m.end() :]
 
 
 def check_visible(name, body):
@@ -631,7 +680,9 @@ def check_utf8(name, data):
         raise FormatError(f"{name} is not valid UTF-8: {exc}") from exc
 
 
-def validate_update(area, old_status, new_status, old_progress, new_progress, expect_from_sha=None):
+def validate_update(
+    area, old_status, new_status, old_progress, new_progress, expect_from_sha=None
+):
     """The full content gate for one generated update. Returns the new section's header.
 
     Checks, in order: both files parse; the status snapshot and the new section agree on area and
@@ -689,9 +740,16 @@ def validate_update(area, old_status, new_status, old_progress, new_progress, ex
     # Shape before content: both files must carry their canonical framing, so a generation cannot
     # drop the heading or the disclaimer and still parse. Each returns the body that follows it.
     status_body = check_status_shape(
-        new_status, area, status["to_sha"], status["ts"], status["coverage"], status["sub_coverage"]
+        new_status,
+        area,
+        status["to_sha"],
+        status["ts"],
+        status["coverage"],
+        status["sub_coverage"],
     )
-    section_body = check_section_shape(added, area, section["from_sha"], section["to_sha"])
+    section_body = check_section_shape(
+        added, area, section["from_sha"], section["to_sha"]
+    )
 
     # Remove the legitimate headers from each (the status header, and the coverage headers the
     # shape check just proved sit in the prefix), then scan what is left with no exemptions.
@@ -704,7 +762,9 @@ def validate_update(area, old_status, new_status, old_progress, new_progress, ex
     if old_status is not None:
         old = parse_status(old_status)
         if old["to_sha"] == status["to_sha"]:
-            raise FormatError(f"STATUS.md still describes {status['to_sha'][:7]}; nothing advanced")
+            raise FormatError(
+                f"STATUS.md still describes {status['to_sha'][:7]}; nothing advanced"
+            )
 
     # Last, so a more specific failure (an injected marker, an unadvanced snapshot) reports its own
     # reason rather than being masked by a complaint about length.

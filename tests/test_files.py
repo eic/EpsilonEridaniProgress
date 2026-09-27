@@ -33,7 +33,9 @@ def raises(fn, needle=None):
         fn()
     except FormatError as exc:
         if needle and needle not in str(exc):
-            raise AssertionError(f"wrong FormatError: expected {needle!r} in {str(exc)!r}") from None
+            raise AssertionError(
+                f"wrong FormatError: expected {needle!r} in {str(exc)!r}"
+            ) from None
         return
     raise AssertionError("expected a FormatError, none raised")
 
@@ -42,10 +44,17 @@ def raises(fn, needle=None):
 
 
 def test_status_round_trip():
-    text = files.render_status("ContourIntegration", A, "2026-07-30T11:34:41Z", "Some prose.")
+    text = files.render_status(
+        "ContourIntegration", A, "2026-07-30T11:34:41Z", "Some prose."
+    )
     h = files.parse_status(text)
-    assert h == {"roadmap": "ContourIntegration", "to_sha": A, "ts": "2026-07-30T11:34:41Z",
-                 "coverage": None, "sub_coverage": []}, h
+    assert h == {
+        "roadmap": "ContourIntegration",
+        "to_sha": A,
+        "ts": "2026-07-30T11:34:41Z",
+        "coverage": None,
+        "sub_coverage": [],
+    }, h
     # The standing "may be out of date" note is load-bearing: a reader must not take a snapshot
     # as authoritative about the current tip.
     assert "subsequent updates" in text
@@ -72,16 +81,26 @@ def test_cursor_and_reported_prs():
 
 
 H = "0" * 64
-COV = {"roadmap": "PDE", "to_sha": B, "readme_sha": H,
-       "layers": [{"id": "Lane A", "state": "partial", "remaining": "the trace theorem"},
-                  {"id": "Lane B", "state": "unassessed"}]}
+COV = {
+    "roadmap": "PDE",
+    "to_sha": B,
+    "readme_sha": H,
+    "layers": [
+        {"id": "Lane A", "state": "partial", "remaining": "the trace theorem"},
+        {"id": "Lane B", "state": "unassessed"},
+    ],
+}
 
 
 def _pair(area="PDE", coverage=None, status_prose=None):
     """A first update for `area`: (new_status, new_progress) that validate_update accepts."""
-    prose = status_prose or ("Prose about where the roadmap stands, long enough to clear the floor. " * 6)
+    prose = status_prose or (
+        "Prose about where the roadmap stands, long enough to clear the floor. " * 6
+    )
     status = files.render_status(area, B, "t", prose, coverage)
-    progress = files.new_progress_file(area) + files.render_section(area, A, B, [1], "w", prose)
+    progress = files.new_progress_file(area) + files.render_section(
+        area, A, B, [1], "w", prose
+    )
     return status, progress
 
 
@@ -99,20 +118,52 @@ def test_coverage_header_must_fit_the_status_header_and_the_schema():
     lane = {"id": "Lane A", "state": "done"}
     cases = [
         ("another roadmap", dict(COV, roadmap="ODE"), "is for 'ODE'"),
-        ("a sub-roadmap id for the area", dict(COV, roadmap="PDE/Heat"), "expected PDE"),
+        (
+            "a sub-roadmap id for the area",
+            dict(COV, roadmap="PDE/Heat"),
+            "expected PDE",
+        ),
         ("another commit", dict(COV, to_sha=A), "describes"),
         ("a short README hash", dict(COV, readme_sha="abc"), "readme_sha"),
         ("an unknown field", dict(COV, extra=1), "unknown field"),
-        ("a missing field", {k: v for k, v in COV.items() if k != "readme_sha"}, "missing field"),
+        (
+            "a missing field",
+            {k: v for k, v in COV.items() if k != "readme_sha"},
+            "missing field",
+        ),
         ("no layers", dict(COV, layers=[]), "non-empty"),
-        ("an illegal state", dict(COV, layers=[dict(lane, state="soon")]), "expected one of"),
+        (
+            "an illegal state",
+            dict(COV, layers=[dict(lane, state="soon")]),
+            "expected one of",
+        ),
         ("a layer twice", dict(COV, layers=[lane, lane]), "twice"),
-        ("an unknown layer field", dict(COV, layers=[dict(lane, note="x")]), "unknown field"),
+        (
+            "an unknown layer field",
+            dict(COV, layers=[dict(lane, note="x")]),
+            "unknown field",
+        ),
         ("an unsafe id", dict(COV, layers=[dict(lane, id="<b>")]), "short label"),
-        ("a note that closes the comment", dict(COV, layers=[dict(lane, remaining="x --> y")]), "angle brackets"),
-        ("an overlong note", dict(COV, layers=[dict(lane, remaining="x" * 201)]), "200"),
-        ("a lone surrogate in a note", dict(COV, layers=[dict(lane, remaining="a \ud800 b")]), "lone surrogates"),
-        ("too many layers", dict(COV, layers=[{"id": f"L{i}", "state": "done"} for i in range(65)]), "cap"),
+        (
+            "a note that closes the comment",
+            dict(COV, layers=[dict(lane, remaining="x --> y")]),
+            "angle brackets",
+        ),
+        (
+            "an overlong note",
+            dict(COV, layers=[dict(lane, remaining="x" * 201)]),
+            "200",
+        ),
+        (
+            "a lone surrogate in a note",
+            dict(COV, layers=[dict(lane, remaining="a \ud800 b")]),
+            "lone surrogates",
+        ),
+        (
+            "too many layers",
+            dict(COV, layers=[{"id": f"L{i}", "state": "done"} for i in range(65)]),
+            "cap",
+        ),
     ]
     for label, payload, needle in cases:
         try:
@@ -128,28 +179,54 @@ def test_a_coverage_header_anywhere_but_the_prefix_is_refused():
     header = f"<!--{files.COVERAGE_MARKER} {files.coverage_header(files.require_coverage(COV, 'PDE', B))}-->"
     # Appended to the prose rather than sitting in the prefix: the shape check sees a prefix built
     # WITH the parsed coverage and the file does not start with it.
-    raises(lambda: files.validate_update("PDE", None, status.rstrip("\n") + "\n" + header + "\n", None, progress, expect_from_sha=A),
-           "does not begin with the canonical header")
+    raises(
+        lambda: files.validate_update(
+            "PDE",
+            None,
+            status.rstrip("\n") + "\n" + header + "\n",
+            None,
+            progress,
+            expect_from_sha=A,
+        ),
+        "does not begin with the canonical header",
+    )
     # Two of them: refused before shape is even considered.
-    doubled = status.replace("# Status: PDE", header + "\n" + header + "\n# Status: PDE", 1)
-    raises(lambda: files.validate_update("PDE", None, doubled, None, progress, expect_from_sha=A), "more than one")
+    doubled = status.replace(
+        "# Status: PDE", header + "\n" + header + "\n# Status: PDE", 1
+    )
+    raises(
+        lambda: files.validate_update(
+            "PDE", None, doubled, None, progress, expect_from_sha=A
+        ),
+        "more than one",
+    )
     # A coverage header for another commit beside a status header: refused whole.
     wrong = files.render_status("PDE", B, "t", "x" * 300).replace(
-        "# Status: PDE", f"<!--{files.COVERAGE_MARKER} {files.coverage_header(dict(COV, to_sha=A))}-->\n# Status: PDE", 1)
+        "# Status: PDE",
+        f"<!--{files.COVERAGE_MARKER} {files.coverage_header(dict(COV, to_sha=A))}-->\n# Status: PDE",
+        1,
+    )
     raises(lambda: files.parse_status(wrong), "describes")
 
 
 # ----- an umbrella area: one coverage header per sub-roadmap -------------------------------------
 
+
 def _sub(child, state="done"):
-    return {"roadmap": f"PDE/{child}", "to_sha": B, "readme_sha": H,
-            "layers": [{"id": "Layer 0", "state": state}]}
+    return {
+        "roadmap": f"PDE/{child}",
+        "to_sha": B,
+        "readme_sha": H,
+        "layers": [{"id": "Layer 0", "state": state}],
+    }
 
 
 def _umbrella(subs, coverage=None):
     prose = "Prose about where the roadmap stands, long enough to clear the floor. " * 6
     status = files.render_status("PDE", B, "t", prose, coverage, subs)
-    return status, files.new_progress_file("PDE") + files.render_section("PDE", A, B, [1], "w", prose)
+    return status, files.new_progress_file("PDE") + files.render_section(
+        "PDE", A, B, [1], "w", prose
+    )
 
 
 def test_sub_roadmap_headers_round_trip_and_pass_the_gate():
@@ -159,7 +236,10 @@ def test_sub_roadmap_headers_round_trip_and_pass_the_gate():
         lines = status.splitlines()
         # Status header, the area's own coverage when there is one, then the children in order.
         own = 1 if coverage else 0
-        assert lines[1 + own].startswith(f"<!--{files.COVERAGE_MARKER} ") and '"PDE/Heat"' in lines[1 + own]
+        assert (
+            lines[1 + own].startswith(f"<!--{files.COVERAGE_MARKER} ")
+            and '"PDE/Heat"' in lines[1 + own]
+        )
         assert '"PDE/Wave"' in lines[2 + own] and lines[3 + own] == "# Status: PDE"
         parsed = files.parse_status(status)
         assert parsed["coverage"] == coverage and parsed["sub_coverage"] == subs, parsed
@@ -171,25 +251,45 @@ def test_sub_roadmap_headers_are_refused_out_of_place():
     cases = [
         ("out of order", [wave, heat], "ascending order"),
         ("a child twice", [heat, heat], "ascending order"),
-        ("another area's child", [dict(heat, roadmap="ODE/Heat")], "expected PDE or PDE/<sub-roadmap>"),
+        (
+            "another area's child",
+            [dict(heat, roadmap="ODE/Heat")],
+            "expected PDE or PDE/<sub-roadmap>",
+        ),
         ("a grandchild", [dict(heat, roadmap="PDE/Heat/Deep")], "alphanumeric"),
         ("a path escape", [dict(heat, roadmap="PDE/..")], "alphanumeric"),
         ("the area itself", [dict(heat, roadmap="PDE")], "must name PDE/<sub-roadmap>"),
         ("another commit", [dict(heat, to_sha=A)], "describes"),
-        ("too many", [_sub(f"C{i:02d}") for i in range(files.MAX_SUB_ROADMAPS + 1)], "cap"),
+        (
+            "too many",
+            [_sub(f"C{i:02d}") for i in range(files.MAX_SUB_ROADMAPS + 1)],
+            "cap",
+        ),
     ]
     for label, subs, needle in cases:
         raises(lambda: files.render_status("PDE", B, "t", "x", None, subs), needle)
     # Written by hand in the wrong order, the file parses but is not the canonical prefix.
     status, progress = _umbrella([heat, wave])
-    h = lambda c: f"<!--{files.COVERAGE_MARKER} {files.coverage_header(c)}-->"
+
+    def h(c):
+        return f"<!--{files.COVERAGE_MARKER} {files.coverage_header(c)}-->"
+
     swapped = status.replace(h(heat) + "\n" + h(wave), h(wave) + "\n" + h(heat), 1)
     assert swapped != status
-    raises(lambda: files.validate_update("PDE", None, swapped, None, progress, expect_from_sha=A), "ascending order")
+    raises(
+        lambda: files.validate_update(
+            "PDE", None, swapped, None, progress, expect_from_sha=A
+        ),
+        "ascending order",
+    )
     # Below the heading rather than in the prefix.
     moved = status.replace(h(wave) + "\n", "", 1).rstrip("\n") + "\n" + h(wave) + "\n"
-    raises(lambda: files.validate_update("PDE", None, moved, None, progress, expect_from_sha=A),
-           "does not begin with the canonical header")
+    raises(
+        lambda: files.validate_update(
+            "PDE", None, moved, None, progress, expect_from_sha=A
+        ),
+        "does not begin with the canonical header",
+    )
 
 
 def test_rejects_bad_shas_and_areas():
@@ -199,9 +299,15 @@ def test_rejects_bad_shas_and_areas():
 
 
 def test_parse_rejects_malformed_json_and_duplicates():
-    raises(lambda: files.parse_headers("<!--epsiloneridani-status:v1 {nope}-->", files.STATUS_MARKER),
-           "malformed")
-    two = files.render_status("PDE", A, "t", "x") + files.render_status("PDE", B, "t", "y")
+    raises(
+        lambda: files.parse_headers(
+            "<!--epsiloneridani-status:v1 {nope}-->", files.STATUS_MARKER
+        ),
+        "malformed",
+    )
+    two = files.render_status("PDE", A, "t", "x") + files.render_status(
+        "PDE", B, "t", "y"
+    )
     raises(lambda: files.parse_status(two), "exactly one")
 
 
@@ -217,7 +323,10 @@ def test_append_only_accepts_trailing_add():
 def test_append_only_rejects_edit_above():
     raises(lambda: files.check_append_only("abc", "Xbcdef"), "above the end")
     # A change in the middle is equally refused, even though the file still grows.
-    raises(lambda: files.check_append_only("abc\ndef\n", "abc\nCHANGED\ndef\nnew\n"), "above the end")
+    raises(
+        lambda: files.check_append_only("abc\ndef\n", "abc\nCHANGED\ndef\nnew\n"),
+        "above the end",
+    )
 
 
 def test_append_only_rejects_no_change_and_truncation():
@@ -229,14 +338,24 @@ def test_append_only_rejects_no_change_and_truncation():
 
 
 def test_reserved_markers_rejected_in_prose():
-    raises(lambda: files.check_no_reserved_markers("text <!--epsiloneridani-scoreboard:v1 {}--> more"),
-           "reserved marker")
+    raises(
+        lambda: files.check_no_reserved_markers(
+            "text <!--epsiloneridani-scoreboard:v1 {}--> more"
+        ),
+        "reserved marker",
+    )
     # A forged *target* marker matters too: housekeeping dedups PRs on it.
-    raises(lambda: files.check_no_reserved_markers('<!--epsiloneridani-target:v1 {"focus":"x"}-->'),
-           "reserved marker")
+    raises(
+        lambda: files.check_no_reserved_markers(
+            '<!--epsiloneridani-target:v1 {"focus":"x"}-->'
+        ),
+        "reserved marker",
+    )
     # The one canonical header is removed by the caller before scanning; what remains is clean.
     section = files.render_section("PDE", A, B, [1], "w", "clean")
-    files.check_no_reserved_markers(files.strip_one_header(section, files.PROGRESS_MARKER))
+    files.check_no_reserved_markers(
+        files.strip_one_header(section, files.PROGRESS_MARKER)
+    )
 
 
 def test_strip_one_header_is_exact():
@@ -246,9 +365,15 @@ def test_strip_one_header_is_exact():
     stripped = files.strip_one_header(section, files.PROGRESS_MARKER)
     assert "epsiloneridani-progress:v1" not in stripped, stripped
     # A second, malformed marker in the prose survives stripping and is then caught.
-    evil = files.render_section("PDE", A, B, [1], "w", "text <!--epsiloneridani-progress:v1 junk -->")
-    raises(lambda: files.check_no_reserved_markers(
-        files.strip_one_header(evil, files.PROGRESS_MARKER)), "reserved marker")
+    evil = files.render_section(
+        "PDE", A, B, [1], "w", "text <!--epsiloneridani-progress:v1 junk -->"
+    )
+    raises(
+        lambda: files.check_no_reserved_markers(
+            files.strip_one_header(evil, files.PROGRESS_MARKER)
+        ),
+        "reserved marker",
+    )
 
 
 def test_size_and_utf8_caps():
@@ -266,7 +391,9 @@ PROSE = "Harnack's inequality landed for a nonnegative harmonic function on a pl
 def good_update(area="PDE", from_sha=A, to_sha=B, prs=(7,)):
     status = files.render_status(area, to_sha, "2026-07-30T00:00:00Z", PROSE)
     log = files.new_progress_file(area)
-    new_log = log + files.render_section(area, from_sha, to_sha, list(prs), "window", PROSE)
+    new_log = log + files.render_section(
+        area, from_sha, to_sha, list(prs), "window", PROSE
+    )
     return status, log, new_log
 
 
@@ -281,46 +408,65 @@ def test_validate_requires_status_and_section_to_agree():
     status = files.render_status("PDE", C, "t", "x")  # snapshot at C
     log = files.new_progress_file("PDE")
     new_log = log + files.render_section("PDE", A, B, [1], "w", "y")  # window ends at B
-    raises(lambda: files.validate_update("PDE", None, status, log, new_log), "must describe")
+    raises(
+        lambda: files.validate_update("PDE", None, status, log, new_log),
+        "must describe",
+    )
 
 
 def test_validate_rejects_wrong_area():
     status, log, new_log = good_update(area="PDE")
-    raises(lambda: files.validate_update("ContourIntegration", None, status, log, new_log),
-           "expected ContourIntegration")
+    raises(
+        lambda: files.validate_update("ContourIntegration", None, status, log, new_log),
+        "expected ContourIntegration",
+    )
 
 
 def test_validate_requires_windows_to_tile():
     area = "PDE"
-    log = files.new_progress_file(area) + files.render_section(area, A, B, [1], "w1", "x")
+    log = files.new_progress_file(area) + files.render_section(
+        area, A, B, [1], "w1", "x"
+    )
     # A second window that starts at C rather than continuing from B leaves an unreportable gap.
     status = files.render_status(area, C, "t", "s")
     new_log = log + files.render_section(area, C, C, [2], "w2", "y")
-    raises(lambda: files.validate_update(area, None, status, log, new_log), "tile with no gap")
+    raises(
+        lambda: files.validate_update(area, None, status, log, new_log),
+        "tile with no gap",
+    )
 
 
 def test_validate_rejects_empty_window():
     status = files.render_status("PDE", B, "t", "s")
     log = files.new_progress_file("PDE")
     new_log = log + files.render_section("PDE", B, B, [1], "w", "y")
-    raises(lambda: files.validate_update("PDE", None, status, log, new_log), "non-empty")
+    raises(
+        lambda: files.validate_update("PDE", None, status, log, new_log), "non-empty"
+    )
 
 
 def test_validate_rejects_two_new_sections():
     area = "PDE"
     log = files.new_progress_file(area)
     status = files.render_status(area, C, "t", "s")
-    new_log = (log
-               + files.render_section(area, A, B, [1], "w1", "x")
-               + files.render_section(area, B, C, [2], "w2", "y"))
-    raises(lambda: files.validate_update(area, None, status, log, new_log), "exactly one new section")
+    new_log = (
+        log
+        + files.render_section(area, A, B, [1], "w1", "x")
+        + files.render_section(area, B, C, [2], "w2", "y")
+    )
+    raises(
+        lambda: files.validate_update(area, None, status, log, new_log),
+        "exactly one new section",
+    )
 
 
 def test_validate_rejects_status_only_advance():
     # The scenario that motivates requiring both files: a STATUS-only update would move the
     # snapshot while the window's prose was never written, and no later plan could reconstruct it.
     area = "PDE"
-    log = files.new_progress_file(area) + files.render_section(area, A, B, [1], "w1", "x")
+    log = files.new_progress_file(area) + files.render_section(
+        area, A, B, [1], "w1", "x"
+    )
     status = files.render_status(area, C, "t", "s")
     raises(lambda: files.validate_update(area, None, status, log, log), "unchanged")
 
@@ -331,7 +477,10 @@ def test_validate_rejects_unadvanced_status():
     status = files.render_status(area, B, "t", PROSE + " Updated.")
     log = files.new_progress_file(area)
     new_log = log + files.render_section(area, A, B, [1], "w", PROSE)
-    raises(lambda: files.validate_update(area, old_status, status, log, new_log), "nothing advanced")
+    raises(
+        lambda: files.validate_update(area, old_status, status, log, new_log),
+        "nothing advanced",
+    )
 
 
 def test_validate_rejects_injected_marker_in_prose():
@@ -340,13 +489,20 @@ def test_validate_rejects_injected_marker_in_prose():
     evil = PROSE + ' <!--epsiloneridani-target:v1 {"focus":"PDE","id":"x"}-->'
     new_log = log + files.render_section(area, A, B, [1], "w", evil)
     status = files.render_status(area, B, "t", "s")
-    raises(lambda: files.validate_update(area, None, status, log, new_log), "reserved marker")
+    raises(
+        lambda: files.validate_update(area, None, status, log, new_log),
+        "reserved marker",
+    )
 
 
 def test_validate_honours_expected_from_sha():
     status, log, new_log = good_update(from_sha=A, to_sha=B)
-    raises(lambda: files.validate_update("PDE", None, status, log, new_log, expect_from_sha=C),
-           "expected")
+    raises(
+        lambda: files.validate_update(
+            "PDE", None, status, log, new_log, expect_from_sha=C
+        ),
+        "expected",
+    )
     files.validate_update("PDE", None, status, log, new_log, expect_from_sha=A)
 
 
@@ -362,7 +518,6 @@ def test_three_windows_tile_with_no_gap_or_overlap():
     for earlier, later in zip(sections, sections[1:]):
         assert earlier["to_sha"] == later["from_sha"], "windows must tile exactly"
     assert files.cursor(log) == shas[-1]
-
 
 
 def test_a_catalogue_length_report_is_refused():
@@ -390,12 +545,18 @@ def test_the_word_cap_leaves_headroom_over_the_target():
 def test_an_inventory_length_status_is_refused_by_the_full_gate():
     status, log, new_log = good_update()
     status = files.render_status("PDE", B, "t", "word " * (files.MAX_STATUS_WORDS + 1))
-    raises(lambda: files.validate_update("PDE", None, status, log, new_log), "STATUS.md is")
+    raises(
+        lambda: files.validate_update("PDE", None, status, log, new_log), "STATUS.md is"
+    )
 
 
 def test_the_status_cap_leaves_headroom_over_the_prompt_target():
-    assert files.check_word_count("STATUS.md", "word " * 750, files.MAX_STATUS_WORDS) == 750
+    assert (
+        files.check_word_count("STATUS.md", "word " * 750, files.MAX_STATUS_WORDS)
+        == 750
+    )
     assert files.MAX_STATUS_WORDS > 750
+
 
 for _name, _fn in sorted(globals().items()):
     if _name.startswith("test_") and callable(_fn):

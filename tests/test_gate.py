@@ -31,7 +31,9 @@ def refuses(fn, needle=None):
         fn()
     except Refused as exc:
         if needle and needle not in str(exc):
-            raise AssertionError(f"refused for the wrong reason: {str(exc)!r}") from None
+            raise AssertionError(
+                f"refused for the wrong reason: {str(exc)!r}"
+            ) from None
         return str(exc)
     raise AssertionError("expected a refusal, the gate ALLOWED this")
 
@@ -56,7 +58,9 @@ def make_pr(**over):
     return pr
 
 
-def make_files(area=AREA, names=("STATUS.md", "PROGRESS.md"), status="modified", **over):
+def make_files(
+    area=AREA, names=("STATUS.md", "PROGRESS.md"), status="modified", **over
+):
     out = []
     for n in names:
         f = {"filename": f"EpsilonEridaniRoadmaps/{area}/{n}", "status": status}
@@ -67,8 +71,16 @@ def make_files(area=AREA, names=("STATUS.md", "PROGRESS.md"), status="modified",
 
 def make_tree(area=AREA, mode="100644"):
     return [
-        {"path": f"EpsilonEridaniRoadmaps/{area}/STATUS.md", "mode": mode, "type": "blob"},
-        {"path": f"EpsilonEridaniRoadmaps/{area}/PROGRESS.md", "mode": mode, "type": "blob"},
+        {
+            "path": f"EpsilonEridaniRoadmaps/{area}/STATUS.md",
+            "mode": mode,
+            "type": "blob",
+        },
+        {
+            "path": f"EpsilonEridaniRoadmaps/{area}/PROGRESS.md",
+            "mode": mode,
+            "type": "blob",
+        },
     ]
 
 
@@ -78,15 +90,23 @@ PROSE = "Harnack's inequality landed for a nonnegative harmonic function on a pl
 def make_content(from_sha=FROM, to_sha=TO, prs=(1, 2, 3), area=AREA, prose=None):
     prose = PROSE if prose is None else prose
     old_progress = files.new_progress_file(area)
-    new_progress = old_progress + files.render_section(area, from_sha, to_sha, list(prs), "w", prose)
+    new_progress = old_progress + files.render_section(
+        area, from_sha, to_sha, list(prs), "w", prose
+    )
     new_status = files.render_status(area, to_sha, "2026-07-30T00:00:00Z", PROSE)
     return None, new_status, old_progress, new_progress
 
 
 def build_run(**over):
     """A fully-specified check-run. Every field is required by the gate, so fixtures state them all."""
-    run = {"name": "build", "head_sha": HEAD, "conclusion": "success",
-           "status": "completed", "app_id": gate.GITHUB_ACTIONS_APP_ID, "source": "check_run"}
+    run = {
+        "name": "build",
+        "head_sha": HEAD,
+        "conclusion": "success",
+        "status": "completed",
+        "app_id": gate.GITHUB_ACTIONS_APP_ID,
+        "source": "check_run",
+    }
     run.update(over)
     return run
 
@@ -99,8 +119,14 @@ MAIN = "9a9a9a9" + "0" * 33
 
 def make_window(**over):
     """A window that really is a forward stretch of documented EpsilonEridani history."""
-    w = {"repo": "eic/EpsilonEridani", "ref": "docgen", "from_sha": FROM, "to_sha": TO,
-         "to_reachable": True, "advances": True}
+    w = {
+        "repo": "eic/EpsilonEridani",
+        "ref": "docgen",
+        "from_sha": FROM,
+        "to_sha": TO,
+        "to_reachable": True,
+        "advances": True,
+    }
     w.update(over)
     return w
 
@@ -108,9 +134,22 @@ def make_window(**over):
 NOW = "2026-07-30T12:00:00Z"
 
 
-def call(pr=None, changed=None, tree=None, content=None, checks=None, cursor=FROM, window=-1,
-         compare_status="ahead", behind_by=0, old_paths=None, last_report_at=None, now=NOW,
-         area_exists=True, expected_bootstrap=None):
+def call(
+    pr=None,
+    changed=None,
+    tree=None,
+    content=None,
+    checks=None,
+    cursor=FROM,
+    window=-1,
+    compare_status="ahead",
+    behind_by=0,
+    old_paths=None,
+    last_report_at=None,
+    now=NOW,
+    area_exists=True,
+    expected_bootstrap=None,
+):
     old_status, new_status, old_progress, new_progress = content or make_content()
     return gate.decide(
         pr=pr or make_pr(),
@@ -131,8 +170,11 @@ def call(pr=None, changed=None, tree=None, content=None, checks=None, cursor=FRO
         compare_status=compare_status,
         behind_by=behind_by,
         main_sha=MAIN,
-        old_paths=old_paths if old_paths is not None else {
-            n: f"EpsilonEridaniRoadmaps/{AREA}/{n}" for n in ("STATUS.md", "PROGRESS.md")
+        old_paths=old_paths
+        if old_paths is not None
+        else {
+            n: f"EpsilonEridaniRoadmaps/{AREA}/{n}"
+            for n in ("STATUS.md", "PROGRESS.md")
         },
     )
 
@@ -153,7 +195,13 @@ def test_allows_a_well_formed_update():
 
 def test_allows_a_fork():
     """Anyone may publish, which in practice means from a fork: no PR content is ever checked out."""
-    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"}})
+    pr = make_pr(
+        head={
+            "ref": BRANCH,
+            "sha": HEAD,
+            "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"},
+        }
+    )
     assert call(pr=pr)["area"] == AREA
 
 
@@ -171,8 +219,10 @@ def test_refuses_a_fabricated_to_sha():
     an unbounded walk, each step burning a window that could never afterwards be reported and each
     step posting to Zulip. A fabricated sha is not reachable from the documentation branch.
     """
-    refuses(lambda: call(window=make_window(to_reachable=False, advances=None)),
-            "names no published history")
+    refuses(
+        lambda: call(window=make_window(to_reachable=False, advances=None)),
+        "names no published history",
+    )
 
 
 def test_refuses_a_window_that_does_not_move_forward():
@@ -187,7 +237,9 @@ def test_refuses_when_the_window_could_not_be_checked():
 
 def test_refuses_when_the_checked_window_is_not_the_reported_one():
     """The window is resolved from the same pinned blob the section is parsed from; they must agree."""
-    refuses(lambda: call(window=make_window(to_sha="b" * 40)), "is not the section's to_sha")
+    refuses(
+        lambda: call(window=make_window(to_sha="b" * 40)), "is not the section's to_sha"
+    )
 
 
 def test_a_fork_that_force_pushes_after_opening_gains_nothing():
@@ -197,7 +249,13 @@ def test_a_fork_that_force_pushes_after_opening_gains_nothing():
     head, and evidence gathered for the old one no longer applies: here the build success names a
     commit that is not the pinned head, which is exactly what a force-push leaves behind.
     """
-    pr = make_pr(head={"ref": BRANCH, "sha": HEAD, "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"}})
+    pr = make_pr(
+        head={
+            "ref": BRANCH,
+            "sha": HEAD,
+            "repo": {"full_name": "someone/EpsilonEridaniRoadmaps"},
+        }
+    )
     refuses(lambda: call(pr=pr, checks=[build_run(head_sha="0" * 40)]), "names head")
 
 
@@ -214,7 +272,9 @@ def test_a_first_report_must_start_where_the_roadmap_starts():
 
 
 def test_a_first_report_is_refused_when_the_start_is_unknown():
-    refuses(lambda: call(cursor=None, expected_bootstrap=None), "could not be determined")
+    refuses(
+        lambda: call(cursor=None, expected_bootstrap=None), "could not be determined"
+    )
 
 
 def test_refuses_an_invented_roadmap():
@@ -269,8 +329,13 @@ def test_refuses_a_non_progress_branch():
 
 
 def test_refuses_a_branch_whose_area_is_not_alphanumeric():
-    pr = make_pr(head={"ref": f"progress/{FROM[:7]}-{TO[:7]}/../../etc", "sha": HEAD,
-                       "repo": {"full_name": REPO}})
+    pr = make_pr(
+        head={
+            "ref": f"progress/{FROM[:7]}-{TO[:7]}/../../etc",
+            "sha": HEAD,
+            "repo": {"full_name": REPO},
+        }
+    )
     refuses(lambda: call(pr=pr), "not a progress branch")
 
 
@@ -289,22 +354,31 @@ def test_refuses_an_unknown_comparison():
 
 
 def test_refuses_an_extra_path():
-    changed = make_files() + [{"filename": f"EpsilonEridaniRoadmaps/{AREA}/README.md", "status": "modified"}]
+    changed = make_files() + [
+        {"filename": f"EpsilonEridaniRoadmaps/{AREA}/README.md", "status": "modified"}
+    ]
     refuses(lambda: call(changed=changed), "not an allowed generated file")
 
 
 def test_refuses_a_workflow_path():
-    changed = make_files() + [{"filename": ".github/workflows/evil.yml", "status": "added"}]
+    changed = make_files() + [
+        {"filename": ".github/workflows/evil.yml", "status": "added"}
+    ]
     refuses(lambda: call(changed=changed), "not an allowed generated file")
 
 
 def test_refuses_status_only():
     """The motivating case for requiring both files: the cursor would advance past unwritten prose."""
-    refuses(lambda: call(changed=make_files(names=("STATUS.md",))), "missing required file")
+    refuses(
+        lambda: call(changed=make_files(names=("STATUS.md",))), "missing required file"
+    )
 
 
 def test_refuses_progress_only():
-    refuses(lambda: call(changed=make_files(names=("PROGRESS.md",))), "missing required file")
+    refuses(
+        lambda: call(changed=make_files(names=("PROGRESS.md",))),
+        "missing required file",
+    )
 
 
 def test_refuses_files_from_another_area():
@@ -313,7 +387,9 @@ def test_refuses_files_from_another_area():
 
 
 def test_refuses_a_deletion():
-    refuses(lambda: call(changed=make_files(status="removed")), "only added or modified")
+    refuses(
+        lambda: call(changed=make_files(status="removed")), "only added or modified"
+    )
 
 
 def test_refuses_a_rename():
@@ -339,14 +415,18 @@ def test_refuses_writing_into_two_parent_directories():
 
 
 def test_refuses_a_duplicated_path():
-    changed = make_files() + [{"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "modified"}]
+    changed = make_files() + [
+        {"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "modified"}
+    ]
     refuses(lambda: call(changed=changed), "appears twice")
 
 
 def test_refuses_more_files_than_allowed():
     """Belt and braces alongside the both-files check: a repeated path is caught too."""
     changed = make_files()
-    changed.append({"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "added"})
+    changed.append(
+        {"filename": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "status": "added"}
+    )
     refuses(lambda: call(changed=changed), "appears twice")
 
 
@@ -371,7 +451,13 @@ def test_refuses_when_a_tree_entry_is_missing():
     and the collector produced exactly that whenever a per-path fetch failed, so the symlink defence
     (the one check that must never fail open) could be skipped by making a fetch fail."""
     refuses(lambda: call(tree=[]), "no tree entry")
-    partial = [{"path": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md", "mode": "100644", "type": "blob"}]
+    partial = [
+        {
+            "path": f"EpsilonEridaniRoadmaps/{AREA}/STATUS.md",
+            "mode": "100644",
+            "type": "blob",
+        }
+    ]
     refuses(lambda: call(tree=partial), "no tree entry")
 
 
@@ -401,7 +487,9 @@ def test_refuses_a_submodule():
 
 
 def test_refuses_an_injected_marker_in_prose():
-    content = make_content(prose=PROSE + ' <!--epsiloneridani-status:v1 {"roadmap":"PDE"}-->')
+    content = make_content(
+        prose=PROSE + ' <!--epsiloneridani-status:v1 {"roadmap":"PDE"}-->'
+    )
     refuses(lambda: call(content=content), "reserved marker")
 
 
@@ -409,8 +497,10 @@ def test_refuses_a_rewritten_log():
     """PROGRESS.md must grow only at the end."""
     old_status, new_status, old_progress, new_progress = make_content()
     tampered = "EDITED " + new_progress
-    refuses(lambda: call(content=(old_status, new_status, old_progress, tampered)),
-            "above the end")
+    refuses(
+        lambda: call(content=(old_status, new_status, old_progress, tampered)),
+        "above the end",
+    )
 
 
 def test_refuses_a_cursor_that_does_not_continue_current_main():
@@ -429,7 +519,10 @@ def test_refuses_mismatched_status_and_section():
     new_progress = old_progress + files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     # Snapshot claims a different commit than the window ends at.
     new_status = files.render_status(AREA, "c" * 40, "t", PROSE)
-    refuses(lambda: call(content=(None, new_status, old_progress, new_progress)), "must describe")
+    refuses(
+        lambda: call(content=(None, new_status, old_progress, new_progress)),
+        "must describe",
+    )
 
 
 def test_refuses_invalid_utf8():
@@ -437,12 +530,22 @@ def test_refuses_invalid_utf8():
     bad = new_progress.encode()[:-3] + b"\xff\xfe"
     try:
         gate.decide(
-            pr=make_pr(), changed_files=make_files(), tree_entries=make_tree(),
-            old_status=old_status, new_status_bytes=new_status.encode(),
-            old_progress=old_progress, new_progress_bytes=bad,
-            check_runs=CHECKS_OK, base_repo=REPO, code_window=make_window(),
-            area_exists=True, now=NOW, current_main_cursor=FROM,
-            compare_status="ahead", behind_by=0, main_sha=MAIN,
+            pr=make_pr(),
+            changed_files=make_files(),
+            tree_entries=make_tree(),
+            old_status=old_status,
+            new_status_bytes=new_status.encode(),
+            old_progress=old_progress,
+            new_progress_bytes=bad,
+            check_runs=CHECKS_OK,
+            base_repo=REPO,
+            code_window=make_window(),
+            area_exists=True,
+            now=NOW,
+            current_main_cursor=FROM,
+            compare_status="ahead",
+            behind_by=0,
+            main_sha=MAIN,
         )
     except (Refused, files.FormatError) as exc:
         assert "UTF-8" in str(exc), str(exc)
@@ -454,27 +557,41 @@ def test_refuses_an_area_mismatch_between_branch_and_content():
     """The branch says ReductiveGroups; the files say PDE."""
     content = make_content(area="PDE")
     changed = make_files(area="PDE")
-    refuses(lambda: call(changed=changed, content=content), "not in the ReductiveGroups directory")
+    refuses(
+        lambda: call(changed=changed, content=content),
+        "not in the ReductiveGroups directory",
+    )
 
 
 def test_refuses_bare_headers_with_no_prose():
     """A file consisting of nothing but a well-formed header passed every structural check and would
     have merged -- and then announced an empty message to Zulip. The floor is measured against what
     the renderer emits for an EMPTY body, so it tracks the boilerplate rather than a magic number."""
-    bare_status = '<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t"}-->' % (AREA, TO)
+    bare_status = (
+        '<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t"}-->'
+        % (AREA, TO)
+    )
     old_progress = files.new_progress_file(AREA)
-    bare_section = ('\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s",'
-                    '"prs":[1]}-->' % (AREA, FROM, TO))
-    refuses(lambda: call(content=(None, bare_status, old_progress, old_progress + bare_section)),
-            "missing")
+    bare_section = (
+        '\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s",'
+        '"prs":[1]}-->' % (AREA, FROM, TO)
+    )
+    refuses(
+        lambda: call(
+            content=(None, bare_status, old_progress, old_progress + bare_section)
+        ),
+        "missing",
+    )
 
 
 def test_refuses_a_stub_section_under_a_real_status():
     old_progress = files.new_progress_file(AREA)
     stub = files.render_section(AREA, FROM, TO, [1], "w", "Some things landed.")
     status = files.render_status(AREA, TO, "t", PROSE)
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + stub)),
-            "characters of prose")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + stub)),
+        "characters of prose",
+    )
 
 
 def test_refuses_a_status_missing_the_disclaimer():
@@ -484,7 +601,9 @@ def test_refuses_a_status_missing_the_disclaimer():
     new_progress = old_progress + files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     good = files.render_status(AREA, TO, "t", PROSE)
     stripped = good.replace(files.STATUS_DISCLAIMER, "")
-    refuses(lambda: call(content=(None, stripped, old_progress, new_progress)), "disclaimer")
+    refuses(
+        lambda: call(content=(None, stripped, old_progress, new_progress)), "disclaimer"
+    )
 
 
 def test_refuses_a_status_whose_header_is_not_first():
@@ -494,7 +613,10 @@ def test_refuses_a_status_whose_header_is_not_first():
     new_progress = old_progress + files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     good = files.render_status(AREA, TO, "t", PROSE)
     moved = "Preamble a reader sees first.\n\n" + good
-    refuses(lambda: call(content=(None, moved, old_progress, new_progress)), "does not begin with")
+    refuses(
+        lambda: call(content=(None, moved, old_progress, new_progress)),
+        "does not begin with",
+    )
 
 
 def test_refuses_a_section_without_its_heading():
@@ -502,7 +624,10 @@ def test_refuses_a_section_without_its_heading():
     section = files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     headless = section.replace(f"## {AREA}: ", "Some other line ")
     status = files.render_status(AREA, TO, "t", PROSE)
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + headless)), "must begin with")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + headless)),
+        "must begin with",
+    )
 
 
 def test_refuses_junk_pr_numbers():
@@ -511,9 +636,14 @@ def test_refuses_junk_pr_numbers():
     old_progress = files.new_progress_file(AREA)
     status = files.render_status(AREA, TO, "t", PROSE)
     for junk in ('["1"]', "[true]", "[1.5]", "[-3]", "[]", "[1,1]"):
-        bad = ('\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s","prs":%s}-->\n'
-               '## %s: w\n\n%s\n' % (AREA, FROM, TO, junk, AREA, PROSE))
-        refuses(lambda b=bad: call(content=(None, status, old_progress, old_progress + b)), "prs")
+        bad = (
+            '\n<!--epsiloneridani-progress:v1 {"roadmap":"%s","from_sha":"%s","to_sha":"%s","prs":%s}-->\n'
+            "## %s: w\n\n%s\n" % (AREA, FROM, TO, junk, AREA, PROSE)
+        )
+        refuses(
+            lambda b=bad: call(content=(None, status, old_progress, old_progress + b)),
+            "prs",
+        )
 
 
 def test_refuses_a_report_wrapped_in_a_code_fence():
@@ -525,10 +655,18 @@ def test_refuses_a_report_wrapped_in_a_code_fence():
     fenced_status = f"```\n{good_status}\n```\n"
     good_section = files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     fenced_section = f"```\n{good_section}\n```\n"
-    refuses(lambda: call(content=(None, fenced_status, old_progress, old_progress + good_section)),
-            "does not begin with")
-    refuses(lambda: call(content=(None, good_status, old_progress, old_progress + fenced_section)),
-            "must begin with")
+    refuses(
+        lambda: call(
+            content=(None, fenced_status, old_progress, old_progress + good_section)
+        ),
+        "does not begin with",
+    )
+    refuses(
+        lambda: call(
+            content=(None, good_status, old_progress, old_progress + fenced_section)
+        ),
+        "must begin with",
+    )
 
 
 def test_refuses_a_heading_naming_the_wrong_window():
@@ -537,7 +675,10 @@ def test_refuses_a_heading_naming_the_wrong_window():
     status = files.render_status(AREA, TO, "t", PROSE)
     section = files.render_section(AREA, FROM, TO, [1], "w", PROSE)
     wrong = section.replace(f"(`{FROM[:7]}` to `{TO[:7]}`)", "(`0000000` to `1111111`)")
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + wrong)), "must begin with")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + wrong)),
+        "must begin with",
+    )
 
 
 def test_refuses_padded_framing_with_no_real_body():
@@ -546,8 +687,10 @@ def test_refuses_padded_framing_with_no_real_body():
     old_progress = files.new_progress_file(AREA)
     status = files.render_status(AREA, TO, "t", PROSE)
     section = files.render_section(AREA, FROM, TO, [1], "w", "tiny")
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + section)),
-            "characters of prose")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + section)),
+        "characters of prose",
+    )
 
 
 def test_refuses_an_unclosed_html_comment_in_the_body():
@@ -557,20 +700,28 @@ def test_refuses_an_unclosed_html_comment_in_the_body():
     old_progress = files.new_progress_file(AREA)
     status = files.render_status(AREA, TO, "t", PROSE)
     section = files.render_section(AREA, FROM, TO, [1], "w", hidden)
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + section)),
-            "must render")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + section)),
+        "must render",
+    )
     bad_status = files.render_status(AREA, TO, "t", hidden)
     good_section = files.render_section(AREA, FROM, TO, [1], "w", PROSE)
-    refuses(lambda: call(content=(None, bad_status, old_progress, old_progress + good_section)),
-            "must render")
+    refuses(
+        lambda: call(
+            content=(None, bad_status, old_progress, old_progress + good_section)
+        ),
+        "must render",
+    )
 
 
 def test_refuses_control_characters_in_the_body():
     old_progress = files.new_progress_file(AREA)
     status = files.render_status(AREA, TO, "t", PROSE)
     section = files.render_section(AREA, FROM, TO, [1], "w", PROSE + "\x00hidden")
-    refuses(lambda: call(content=(None, status, old_progress, old_progress + section)),
-            "control character")
+    refuses(
+        lambda: call(content=(None, status, old_progress, old_progress + section)),
+        "control character",
+    )
 
 
 def test_refuses_a_ts_that_could_open_a_comment():
@@ -595,9 +746,13 @@ def test_refuses_unknown_header_fields():
     might not ignore."""
     old_progress = files.new_progress_file(AREA)
     new_progress = old_progress + files.render_section(AREA, FROM, TO, [1], "w", PROSE)
-    odd = ('<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t","evil":"x"}-->\n\n%s\n'
-           % (AREA, TO, PROSE))
-    refuses(lambda: call(content=(None, odd, old_progress, new_progress)), "unknown field")
+    odd = (
+        '<!--epsiloneridani-status:v1 {"roadmap":"%s","to_sha":"%s","ts":"t","evil":"x"}-->\n\n%s\n'
+        % (AREA, TO, PROSE)
+    )
+    refuses(
+        lambda: call(content=(None, odd, old_progress, new_progress)), "unknown field"
+    )
 
 
 # ----- build ------------------------------------------------------------------------------------
@@ -624,7 +779,10 @@ def test_refuses_a_skipped_or_neutral_build():
     """Both count as passing for ordinary branch protection, so a workflow that skipped the build
     entirely would otherwise have satisfied this."""
     for concl in ("skipped", "neutral"):
-        refuses(lambda c=concl: call(checks=[build_run(conclusion=c)]), "concluded " + repr(concl))
+        refuses(
+            lambda c=concl: call(checks=[build_run(conclusion=c)]),
+            "concluded " + repr(concl),
+        )
 
 
 def test_refuses_an_incomplete_build():
@@ -635,11 +793,21 @@ def test_refuses_an_incomplete_build():
 def test_refuses_a_branch_whose_window_disagrees_with_the_section():
     """The branch encodes the window it reports; requiring agreement stops a branch being reused to
     carry a different window's update."""
-    other = make_pr(head={"ref": f"progress/aaaaaaa-{TO[:7]}/{AREA}", "sha": HEAD,
-                          "repo": {"full_name": REPO}})
+    other = make_pr(
+        head={
+            "ref": f"progress/aaaaaaa-{TO[:7]}/{AREA}",
+            "sha": HEAD,
+            "repo": {"full_name": REPO},
+        }
+    )
     refuses(lambda: call(pr=other), "branch says the window starts at")
-    other2 = make_pr(head={"ref": f"progress/{FROM[:7]}-bbbbbbb/{AREA}", "sha": HEAD,
-                           "repo": {"full_name": REPO}})
+    other2 = make_pr(
+        head={
+            "ref": f"progress/{FROM[:7]}-bbbbbbb/{AREA}",
+            "sha": HEAD,
+            "repo": {"full_name": REPO},
+        }
+    )
     refuses(lambda: call(pr=other2), "branch says the window ends at")
 
 
@@ -672,7 +840,10 @@ def test_refuses_a_build_for_another_commit():
 def test_refuses_a_build_with_missing_provenance():
     """Defaulting an absent field to the acceptable value meant a bare
     {"name": "build", "conclusion": "SUCCESS"} passed: no app to check, status assumed completed."""
-    refuses(lambda: call(checks=[{"name": "build", "conclusion": "SUCCESS"}]), "not a check run")
+    refuses(
+        lambda: call(checks=[{"name": "build", "conclusion": "SUCCESS"}]),
+        "not a check run",
+    )
     refuses(lambda: call(checks=[build_run(app_id=None)]), "reported by app")
     refuses(lambda: call(checks=[build_run(status=None)]), "not completed")
     # Case matters: GitHub emits lowercase, so anything else was not written by GitHub.

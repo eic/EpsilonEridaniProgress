@@ -36,19 +36,40 @@ OUR_PRS = [6328, 6334, 6374, 6409]
 
 
 def body(from_sha=CURSOR, to_sha="787733a", prs=(6328, 6334)):
-    meta = {"roadmap": "ModularForms", "from_sha": from_sha, "to_sha": to_sha,
-            "prs": sorted(prs), "version": "v1"}
-    return apply.BODY_MARKER.replace("{}", json.dumps(meta, sort_keys=True,
-                                                      separators=(",", ":"))) + "\nprose\n"
+    meta = {
+        "roadmap": "ModularForms",
+        "from_sha": from_sha,
+        "to_sha": to_sha,
+        "prs": sorted(prs),
+        "version": "v1",
+    }
+    return (
+        apply.BODY_MARKER.replace(
+            "{}", json.dumps(meta, sort_keys=True, separators=(",", ":"))
+        )
+        + "\nprose\n"
+    )
 
 
-def pr(number, area="ModularForms", from7="37aec57", to7="787733a", owner=OURS, body_text=None,
-       prs=(6328, 6334), meta_from=None):
-    return {"number": number, "url": f"https://example.invalid/{number}",
-            "headRefName": f"progress/{from7}-{to7}/{area}",
-            "headRepositoryOwner": {"login": owner},
-            "body": body_text if body_text is not None
-            else body(from_sha=meta_from or CURSOR, to_sha=to7, prs=prs)}
+def pr(
+    number,
+    area="ModularForms",
+    from7="37aec57",
+    to7="787733a",
+    owner=OURS,
+    body_text=None,
+    prs=(6328, 6334),
+    meta_from=None,
+):
+    return {
+        "number": number,
+        "url": f"https://example.invalid/{number}",
+        "headRefName": f"progress/{from7}-{to7}/{area}",
+        "headRepositoryOwner": {"login": owner},
+        "body": body_text
+        if body_text is not None
+        else body(from_sha=meta_from or CURSOR, to_sha=to7, prs=prs),
+    }
 
 
 def branch(from7="37aec57", to7="28e93d9", area="ModularForms"):
@@ -56,8 +77,9 @@ def branch(from7="37aec57", to7="28e93d9", area="ModularForms"):
 
 
 def sweep(rows, live=CURSOR, planned=CURSOR, keep=None, owners=OWNERS, our_prs=OUR_PRS):
-    return apply.superseded_prs(rows, "ModularForms", live, planned, keep or branch(), owners,
-                                our_prs=our_prs)
+    return apply.superseded_prs(
+        rows, "ModularForms", live, planned, keep or branch(), owners, our_prs=our_prs
+    )
 
 
 def test_an_orphan_whose_window_predates_the_cursor_is_closed():
@@ -112,7 +134,9 @@ def test_unknown_own_window_closes_no_same_cursor_report():
 
 def test_unknown_own_window_still_closes_orphans():
     """Being dead is a property of the report alone."""
-    rows = sweep([pr(372, from7="b218626", to7="0038168", meta_from=OLD_CURSOR)], our_prs=None)
+    rows = sweep(
+        [pr(372, from7="b218626", to7="0038168", meta_from=OLD_CURSOR)], our_prs=None
+    )
     assert [r["number"] for r, _ in rows] == [372]
 
 
@@ -135,24 +159,38 @@ def test_another_area_is_untouched():
 
 
 def test_a_strangers_report_is_never_closed():
-    assert sweep([pr(500, from7="b218626", owner="a-stranger", meta_from=OLD_CURSOR)]) == []
+    assert (
+        sweep([pr(500, from7="b218626", owner="a-stranger", meta_from=OLD_CURSOR)])
+        == []
+    )
 
 
 def test_a_malformed_branch_is_ignored():
-    bad = {"number": 9, "headRefName": "progress/ModularForms",
-           "headRepositoryOwner": {"login": OURS}, "body": body()}
-    worse = {"number": 10, "headRefName": "progress/nowindow/ModularForms",
-             "headRepositoryOwner": {"login": OURS}, "body": body()}
+    bad = {
+        "number": 9,
+        "headRefName": "progress/ModularForms",
+        "headRepositoryOwner": {"login": OURS},
+        "body": body(),
+    }
+    worse = {
+        "number": 10,
+        "headRefName": "progress/nowindow/ModularForms",
+        "headRepositoryOwner": {"login": OURS},
+        "body": body(),
+    }
     assert sweep([bad, worse]) == []
 
 
 def test_the_whole_modular_forms_pileup_is_swept():
     rows = sweep(
-        [pr(372, from7="b218626", to7="0038168", meta_from=OLD_CURSOR),
-         pr(381, from7="b218626", to7="0430506", meta_from=OLD_CURSOR),
-         pr(394, prs=(6328, 6334)),
-         pr(399, to7="28e93d9", prs=OUR_PRS)],
-        keep=branch(to7="28e93d9"))
+        [
+            pr(372, from7="b218626", to7="0038168", meta_from=OLD_CURSOR),
+            pr(381, from7="b218626", to7="0430506", meta_from=OLD_CURSOR),
+            pr(394, prs=(6328, 6334)),
+            pr(399, to7="28e93d9", prs=OUR_PRS),
+        ],
+        keep=branch(to7="28e93d9"),
+    )
     assert sorted(r["number"] for r, _ in rows) == [372, 381, 394]
 
 
@@ -165,12 +203,19 @@ def test_report_meta_reads_the_window():
 
 def test_a_failed_close_is_counted_not_swallowed():
     """The caller has to know, so it keeps retrying on the in-flight path."""
+
     def boom(args, **kw):
         raise apply.gh.GhError("gh exploded")
+
     orig = apply.gh.gh
     apply.gh.gh = boom
     try:
-        assert apply.close_superseded([(pr(372), "because")], "https://example.invalid/399") == 1
+        assert (
+            apply.close_superseded(
+                [(pr(372), "because")], "https://example.invalid/399"
+            )
+            == 1
+        )
     finally:
         apply.gh.gh = orig
 
@@ -178,6 +223,7 @@ def test_a_failed_close_is_counted_not_swallowed():
 def test_a_programming_error_in_a_close_is_not_hidden():
     def boom(args, **kw):
         raise TypeError("a real bug")
+
     orig = apply.gh.gh
     apply.gh.gh = boom
     try:

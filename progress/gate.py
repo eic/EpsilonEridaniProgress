@@ -43,7 +43,9 @@ BRANCH_RE = re.compile(r"\Aprogress/([0-9a-f]{7})-([0-9a-f]{7})/([A-Za-z0-9]+)\Z
 # group 3 the basename. The parent is captured because an area name can legitimately exist under
 # BOTH parents -- `Completed/` is where a finished roadmap is archived -- so matching on the area and
 # basename alone would let one update write to two directories at once.
-PATH_RE = re.compile(r"\A(EpsilonEridaniRoadmaps|Completed)/([A-Za-z0-9]+)/(STATUS\.md|PROGRESS\.md)\Z")
+PATH_RE = re.compile(
+    r"\A(EpsilonEridaniRoadmaps|Completed)/([A-Za-z0-9]+)/(STATUS\.md|PROGRESS\.md)\Z"
+)
 
 # A blob mode other than a regular file means a symlink (120000), a gitlink/submodule (160000), or
 # an executable. A symlink named STATUS.md pointing at something else is the classic way to make a
@@ -154,7 +156,9 @@ def check_files(changed_files, area):
             _refuse(f"path {path!r} is not in the {area} directory")
         status = f.get("status")
         if status not in ("added", "modified"):
-            _refuse(f"path {path!r} has status {status!r}; only added or modified are allowed")
+            _refuse(
+                f"path {path!r} has status {status!r}; only added or modified are allowed"
+            )
         # `previous_filename` present means a rename, which could move a file out of the area.
         if f.get("previous_filename"):
             _refuse(f"path {path!r} is a rename from {f['previous_filename']!r}")
@@ -164,7 +168,9 @@ def check_files(changed_files, area):
     # duplicates, then both files present.
     parents = {parent for parent, _, _ in parsed}
     if len(parents) != 1:
-        _refuse(f"update spans {sorted(parents)}; it must change one directory, not several")
+        _refuse(
+            f"update spans {sorted(parents)}; it must change one directory, not several"
+        )
     seen = {}
     for _, basename, f in parsed:
         if basename in seen:
@@ -172,7 +178,9 @@ def check_files(changed_files, area):
         seen[basename] = f
     missing = [name for name in ALLOWED_BASENAMES if name not in seen]
     if missing:
-        _refuse(f"missing required file(s): {', '.join(missing)}; an update must change both")
+        _refuse(
+            f"missing required file(s): {', '.join(missing)}; an update must change both"
+        )
     return seen, parents.pop()
 
 
@@ -203,8 +211,14 @@ def check_modes(tree_entries, required_paths):
     return True
 
 
-def check_content(area, old_status, new_status_bytes, old_progress, new_progress_bytes,
-                  expect_from_sha=None):
+def check_content(
+    area,
+    old_status,
+    new_status_bytes,
+    old_progress,
+    new_progress_bytes,
+    expect_from_sha=None,
+):
     """Content: both files parse, agree, and the log grew only at the end.
 
     Bytes in, so invalid UTF-8 is caught here rather than raising something unhelpful later.
@@ -213,7 +227,11 @@ def check_content(area, old_status, new_status_bytes, old_progress, new_progress
     new_progress = files.check_utf8("PROGRESS.md", new_progress_bytes)
     try:
         return files.validate_update(
-            area, old_status, new_status, old_progress, new_progress,
+            area,
+            old_status,
+            new_status,
+            old_progress,
+            new_progress,
             expect_from_sha=expect_from_sha,
         )
     except files.FormatError as exc:
@@ -262,7 +280,9 @@ def check_window(code_window, section):
     correct when the round started, throwing away the model's work over a race.
     """
     if not code_window:
-        _refuse("the reported window could not be checked against EpsilonEridani history")
+        _refuse(
+            "the reported window could not be checked against EpsilonEridani history"
+        )
     checked = code_window.get("to_sha") or ""
     if checked != section["to_sha"]:
         # The window was resolved from the same pinned blob the section was parsed from, so this can
@@ -368,15 +388,25 @@ def check_build(check_runs, head_sha, required="build", app_id=GITHUB_ACTIONS_AP
         # completed, head assumed to match. An absent field is unknown provenance, which is exactly
         # the thing this refuses.
         if run.get("source") != "check_run":
-            _refuse(f"{required} on {head_sha[:7]} came from {run.get('source')!r}, not a check run")
+            _refuse(
+                f"{required} on {head_sha[:7]} came from {run.get('source')!r}, not a check run"
+            )
         if run.get("head_sha") != head_sha:
             _refuse(f"{required} names head {run.get('head_sha')!r}, not {head_sha}")
         got_app = run.get("app_id")
         # Compared as an integer, not coerced into one: `int()` accepted "15368" and 15368.9 alike.
-        if isinstance(got_app, bool) or not isinstance(got_app, int) or got_app != app_id:
-            _refuse(f"{required} on {head_sha[:7]} was reported by app {got_app!r}, not {app_id}")
+        if (
+            isinstance(got_app, bool)
+            or not isinstance(got_app, int)
+            or got_app != app_id
+        ):
+            _refuse(
+                f"{required} on {head_sha[:7]} was reported by app {got_app!r}, not {app_id}"
+            )
         if run.get("status") != "completed":
-            _refuse(f"{required} is {run.get('status')!r} on {head_sha[:7]}, not completed")
+            _refuse(
+                f"{required} is {run.get('status')!r} on {head_sha[:7]}, not completed"
+            )
         # Compared exactly, not case-folded: GitHub emits lowercase conclusions, so anything else is
         # not something GitHub wrote.
         if run.get("conclusion") != "success":
@@ -404,11 +434,27 @@ def check_baseline_paths(old_paths, parent, area):
     return True
 
 
-def decide(pr, changed_files, tree_entries, old_status, new_status_bytes, old_progress,
-           new_progress_bytes, check_runs, base_repo,
-           current_main_cursor=None, compare_status=None, behind_by=None, main_sha="",
-           old_paths=None, code_window=None, last_report_at=None, now=None,
-           area_exists=None, expected_bootstrap_from_sha=None):
+def decide(
+    pr,
+    changed_files,
+    tree_entries,
+    old_status,
+    new_status_bytes,
+    old_progress,
+    new_progress_bytes,
+    check_runs,
+    base_repo,
+    current_main_cursor=None,
+    compare_status=None,
+    behind_by=None,
+    main_sha="",
+    old_paths=None,
+    code_window=None,
+    last_report_at=None,
+    now=None,
+    area_exists=None,
+    expected_bootstrap_from_sha=None,
+):
     """Run the whole gate. Returns `{"area", "head_sha", "section"}` or raises `Refused`.
 
     `current_main_cursor` is the area's cursor read from **freshly fetched `main`**, not from the
@@ -451,7 +497,11 @@ def decide(pr, changed_files, tree_entries, old_status, new_status_bytes, old_pr
         current_main_cursor = expect
     check_modes(tree_entries, [f"{parent}/{area}/{name}" for name in ALLOWED_BASENAMES])
     section = check_content(
-        area, old_status, new_status_bytes, old_progress, new_progress_bytes,
+        area,
+        old_status,
+        new_status_bytes,
+        old_progress,
+        new_progress_bytes,
         expect_from_sha=current_main_cursor,
     )
     check_build(check_runs, head_sha)
@@ -476,7 +526,12 @@ def decide(pr, changed_files, tree_entries, old_status, new_status_bytes, old_pr
             f"branch says the window ends at {prov['to_prefix']} but the section says "
             f"{section['to_sha'][:7]}"
         )
-    return {"area": area, "head_sha": head_sha, "main_sha": main_sha, "section": section}
+    return {
+        "area": area,
+        "head_sha": head_sha,
+        "main_sha": main_sha,
+        "section": section,
+    }
 
 
 def summary(result):
@@ -495,10 +550,13 @@ def main(argv=None):
     """
     import argparse
     import pathlib
-    import sys
 
-    ap = argparse.ArgumentParser(description="Decide whether a progress PR may be merged.")
-    ap.add_argument("--bundle", required=True, help="JSON file with the fetched pull-request data")
+    ap = argparse.ArgumentParser(
+        description="Decide whether a progress PR may be merged."
+    )
+    ap.add_argument(
+        "--bundle", required=True, help="JSON file with the fetched pull-request data"
+    )
     args = ap.parse_args(argv)
 
     data = json.loads(pathlib.Path(args.bundle).read_text(encoding="utf-8"))

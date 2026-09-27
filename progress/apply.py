@@ -33,7 +33,7 @@ import json
 import pathlib
 import subprocess
 
-from . import files, gh, layers as layers_mod, window
+from . import files, gh, layers as layers_mod
 
 BRANCH_PREFIX = "progress/"
 # Recorded in the PR body so a reader (and the merge gate) can tell which EpsilonEridaniProgress produced
@@ -53,7 +53,9 @@ def branch_name(plan):
     Determinism is the whole point -- two workers computing the same window compute the same branch,
     so the second one finds the first one's work instead of duplicating it.
     """
-    return f"{BRANCH_PREFIX}{plan['from_sha'][:7]}-{plan['to_sha'][:7]}/{plan['roadmap']}"
+    return (
+        f"{BRANCH_PREFIX}{plan['from_sha'][:7]}-{plan['to_sha'][:7]}/{plan['roadmap']}"
+    )
 
 
 def pr_title(plan):
@@ -95,7 +97,9 @@ def pr_body(plan, section_header, version=None):
 def _run(args, cwd, check=True):
     proc = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True)
     if check and proc.returncode != 0:
-        raise ApplyError(f"{' '.join(args)} failed: {proc.stderr.strip() or proc.returncode}")
+        raise ApplyError(
+            f"{' '.join(args)} failed: {proc.stderr.strip() or proc.returncode}"
+        )
     return proc
 
 
@@ -117,10 +121,22 @@ def own_pr(branch, repo=gh.ROADMAP_REPO, states=("open",)):
     """
     ours = {repo.split("/")[0], _own_login()}
     for state in states:
-        out = gh.gh([
-            "pr", "list", "--repo", repo, "--head", branch, "--state", state,
-            "--limit", "20", "--json", "number,state,url,mergedAt,headRepositoryOwner",
-        ])
+        out = gh.gh(
+            [
+                "pr",
+                "list",
+                "--repo",
+                repo,
+                "--head",
+                branch,
+                "--state",
+                state,
+                "--limit",
+                "20",
+                "--json",
+                "number,state,url,mergedAt,headRepositoryOwner",
+            ]
+        )
         for row in json.loads(out):
             if state == "closed" and row.get("mergedAt"):
                 continue
@@ -140,10 +156,22 @@ def existing_pr(branch, repo=gh.ROADMAP_REPO, owner=None, states=("merged",)):
     head = f"{owner}:{branch}" if owner else branch
     rows = []
     for state in states:
-        out = gh.gh([
-            "pr", "list", "--repo", repo, "--head", head, "--state", state,
-            "--limit", "20", "--json", "number,state,url,mergedAt,headRepositoryOwner",
-        ])
+        out = gh.gh(
+            [
+                "pr",
+                "list",
+                "--repo",
+                repo,
+                "--head",
+                head,
+                "--state",
+                state,
+                "--limit",
+                "20",
+                "--json",
+                "number,state,url,mergedAt,headRepositoryOwner",
+            ]
+        )
         rows.extend(json.loads(out))
     return rows[0] if rows else None
 
@@ -164,8 +192,8 @@ def report_meta(body):
         line = line.strip()
         if not line.startswith(marker):
             continue
-        blob = line[len(marker):]
-        blob = blob[:blob.rfind("-->")] if "-->" in blob else blob
+        blob = line[len(marker) :]
+        blob = blob[: blob.rfind("-->")] if "-->" in blob else blob
         try:
             meta = json.loads(blob)
         except json.JSONDecodeError:
@@ -174,7 +202,9 @@ def report_meta(body):
     return None
 
 
-def superseded_prs(open_prs, area, live_cursor, plan_cursor, keep_branch, owners, our_prs=None):
+def superseded_prs(
+    open_prs, area, live_cursor, plan_cursor, keep_branch, owners, our_prs=None
+):
     """Open reports for `area` that this run's report replaces: `[(row, reason)]`.
 
     **Nothing is swept unless we are the live report.** `live_cursor` is read from the roadmap
@@ -225,8 +255,13 @@ def superseded_prs(open_prs, area, live_cursor, plan_cursor, keep_branch, owners
         if not from7:
             continue
         if not live_cursor.startswith(from7):
-            out.append((row, f"its window starts at {from7}, but the {area} cursor is now "
-                             f"{live_cursor[:7]}, so it can never append"))
+            out.append(
+                (
+                    row,
+                    f"its window starts at {from7}, but the {area} cursor is now "
+                    f"{live_cursor[:7]}, so it can never append",
+                )
+            )
             continue
         if ours is None:
             continue
@@ -238,8 +273,13 @@ def superseded_prs(open_prs, area, live_cursor, plan_cursor, keep_branch, owners
         except (TypeError, ValueError):
             continue
         if theirs < ours:
-            out.append((row, f"its window covers {len(theirs)} of the {len(ours)} pull requests "
-                             f"this one reports, from the same cursor {from7}"))
+            out.append(
+                (
+                    row,
+                    f"its window covers {len(theirs)} of the {len(ours)} pull requests "
+                    f"this one reports, from the same cursor {from7}",
+                )
+            )
     return out
 
 
@@ -254,12 +294,23 @@ def close_superseded(rows, replacement_url):
     for row, reason in rows:
         note = f"Superseded by {replacement_url}: {reason}."
         try:
-            gh.gh(["pr", "close", str(row["number"]), "--repo", gh.ROADMAP_REPO,
-                   "--comment", note])
+            gh.gh(
+                [
+                    "pr",
+                    "close",
+                    str(row["number"]),
+                    "--repo",
+                    gh.ROADMAP_REPO,
+                    "--comment",
+                    note,
+                ]
+            )
             print(f"closed superseded #{row['number']}: {reason}")
         except gh.GhError as exc:
             failed += 1
-            print(f"could not close superseded #{row['number']} ({exc}); leaving it open")
+            print(
+                f"could not close superseded #{row['number']} ({exc}); leaving it open"
+            )
     return failed
 
 
@@ -276,8 +327,13 @@ def sweep(plan, keep_branch, replacement_url):
     """
     live = files.cursor(gh.file_on_default_branch(plan["progress_path"]) or "") or ""
     rows = superseded_prs(
-        gh.open_progress_prs(), plan["roadmap"], live, plan["from_sha"], keep_branch,
-        {gh.ROADMAP_REPO.split("/")[0], _own_login()}, our_prs=plan.get("prs"),
+        gh.open_progress_prs(),
+        plan["roadmap"],
+        live,
+        plan["from_sha"],
+        keep_branch,
+        {gh.ROADMAP_REPO.split("/")[0], _own_login()},
+        our_prs=plan.get("prs"),
     )
     if not rows:
         return 0
@@ -285,8 +341,11 @@ def sweep(plan, keep_branch, replacement_url):
 
 
 def remote_branch_exists(roadmap_dir, branch, remote="origin"):
-    proc = _run(["git", "ls-remote", "--exit-code", "--heads", remote, branch],
-               roadmap_dir, check=False)
+    proc = _run(
+        ["git", "ls-remote", "--exit-code", "--heads", remote, branch],
+        roadmap_dir,
+        check=False,
+    )
     return proc.returncode == 0
 
 
@@ -309,7 +368,9 @@ def push_target(roadmap_dir, repo=gh.ROADMAP_REPO):
     # it -- that raises, and this is precisely the path an operator without push access takes.
     login = gh.gh(["api", "user", "--jq", ".login"]).strip()
     if not login:
-        raise RuntimeError("could not determine the authenticated login, so no fork can be used")
+        raise RuntimeError(
+            "could not determine the authenticated login, so no fork can be used"
+        )
     # `--clone=false` is idempotent: it creates the fork if absent and is a no-op if it exists.
     gh.gh(["repo", "fork", repo, "--clone=false", "--remote=false"])
 
@@ -321,15 +382,26 @@ def push_target(roadmap_dir, repo=gh.ROADMAP_REPO):
     #
     # `--paginate`, because the fork listing is ordered by creation and a popular repository's
     # first page says nothing about whether this account appears later.
-    fork = gh.gh([
-        "api", "--paginate", f"repos/{repo}/forks?per_page=100", "--jq",
-        f'.[] | select(.owner.login == "{login}") | select(.parent.full_name == "{repo}") '
-        f'| .full_name',
-    ]).strip().splitlines()
+    fork = (
+        gh.gh(
+            [
+                "api",
+                "--paginate",
+                f"repos/{repo}/forks?per_page=100",
+                "--jq",
+                f'.[] | select(.owner.login == "{login}") | select(.parent.full_name == "{repo}") '
+                f"| .full_name",
+            ]
+        )
+        .strip()
+        .splitlines()
+    )
     fork = fork[0].strip() if fork else ""
     if not fork:
         candidate = f"{login}/{repo.split('/')[-1]}"
-        parent = gh.gh(["api", f"repos/{candidate}", "--jq", '.parent.full_name // ""']).strip()
+        parent = gh.gh(
+            ["api", f"repos/{candidate}", "--jq", '.parent.full_name // ""']
+        ).strip()
         fork = candidate if parent == repo else ""
     if not fork or "/" not in fork:
         raise RuntimeError(
@@ -337,7 +409,10 @@ def push_target(roadmap_dir, repo=gh.ROADMAP_REPO):
             f"access to {repo} or a fork of it"
         )
     url = f"https://github.com/{fork}.git"
-    if _run(["git", "remote", "get-url", "fork"], roadmap_dir, check=False).returncode == 0:
+    if (
+        _run(["git", "remote", "get-url", "fork"], roadmap_dir, check=False).returncode
+        == 0
+    ):
         _run(["git", "remote", "set-url", "fork", url], roadmap_dir)
     else:
         _run(["git", "remote", "add", "fork", url], roadmap_dir)
@@ -352,7 +427,9 @@ def render_update(plan, status_body, section_body, old_status, old_progress):
     worker rather than becoming a pull request the gate has to reject.
     """
     area = plan["roadmap"]
-    window_label = f"{(plan.get('from_date') or '')[:10]} to {(plan.get('to_date') or '')[:10]}"
+    window_label = (
+        f"{(plan.get('from_date') or '')[:10]} to {(plan.get('to_date') or '')[:10]}"
+    )
 
     # The status prose ends with a ```coverage block, one line per layer the plan listed (for an
     # umbrella area, per layer of each sub-roadmap too). It becomes the coverage headers and leaves
@@ -367,10 +444,17 @@ def render_update(plan, status_body, section_body, old_status, old_progress):
     coverage, sub_coverage = None, []
     if block is not None:
         if not own_layers and not sub_roadmaps:
-            print("the status body ends with a coverage block but the plan lists no layers; dropping it")
+            print(
+                "the status body ends with a coverage block but the plan lists no layers; dropping it"
+            )
         else:
             coverage, sub_coverage = layers_mod.coverage_block(
-                area, plan["to_sha"], plan.get("readme_sha"), own_layers, sub_roadmaps, block
+                area,
+                plan["to_sha"],
+                plan.get("readme_sha"),
+                own_layers,
+                sub_roadmaps,
+                block,
             )
     elif own_layers or sub_roadmaps:
         count = len(own_layers) + sum(len(sub["layers"]) for sub in sub_roadmaps)
@@ -385,17 +469,25 @@ def render_update(plan, status_body, section_body, old_status, old_progress):
     section = files.render_section(
         area, plan["from_sha"], plan["to_sha"], plan["prs"], window_label, section_body
     )
-    base_progress = old_progress if old_progress is not None else files.new_progress_file(area)
+    base_progress = (
+        old_progress if old_progress is not None else files.new_progress_file(area)
+    )
     progress_text = base_progress + section
 
     header = files.validate_update(
-        area, old_status, status_text, base_progress, progress_text,
+        area,
+        old_status,
+        status_text,
+        base_progress,
+        progress_text,
         expect_from_sha=plan["from_sha"],
     )
     return status_text, progress_text, header
 
 
-def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, version=None):
+def run(
+    plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, version=None
+):
     """Write, commit, push and open the PR. Returns a process exit code."""
     roadmap_dir = pathlib.Path(roadmap_dir)
     branch = branch_name(plan)
@@ -421,7 +513,9 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
         try:
             sweep(plan, branch, open_pr.get("url") or "the open report")
         except gh.GhError as exc:
-            print(f"could not sweep superseded reports ({exc}); the report is open regardless")
+            print(
+                f"could not sweep superseded reports ({exc}); the report is open regardless"
+            )
         return EX_NOPROGRESS
 
     # A CLOSED pull request means this window was refused, and reopening it every day is the loop
@@ -445,8 +539,12 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
     if not (roadmap_dir / rel).is_dir():
         raise ApplyError(f"{rel} is not a directory in {roadmap_dir}")
 
-    old_status = status_path.read_text(encoding="utf-8") if status_path.is_file() else None
-    old_progress = progress_path.read_text(encoding="utf-8") if progress_path.is_file() else None
+    old_status = (
+        status_path.read_text(encoding="utf-8") if status_path.is_file() else None
+    )
+    old_progress = (
+        progress_path.read_text(encoding="utf-8") if progress_path.is_file() else None
+    )
 
     status_text, progress_text, header = render_update(
         plan, status_body, section_body, old_status, old_progress
@@ -460,17 +558,33 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
     # gate would (correctly) refuse the result.
     _run(["git", "add", "--", plan["status_path"], plan["progress_path"]], roadmap_dir)
 
-    changed = _run(["git", "diff", "--cached", "--name-only"], roadmap_dir).stdout.split()
+    changed = _run(
+        ["git", "diff", "--cached", "--name-only"], roadmap_dir
+    ).stdout.split()
     if sorted(changed) != sorted([plan["status_path"], plan["progress_path"]]):
-        raise ApplyError(f"staged paths are {changed}, expected exactly the two generated files")
+        raise ApplyError(
+            f"staged paths are {changed}, expected exactly the two generated files"
+        )
 
     title = pr_title(plan)
     body = pr_body(plan, header, version=version)
-    _run(["git", "commit", "-q", "-m", title, "-m", f"Window {plan['from_sha'][:7]}..{plan['to_sha'][:7]}"],
-         roadmap_dir)
+    _run(
+        [
+            "git",
+            "commit",
+            "-q",
+            "-m",
+            title,
+            "-m",
+            f"Window {plan['from_sha'][:7]}..{plan['to_sha'][:7]}",
+        ],
+        roadmap_dir,
+    )
 
     if dry_run:
-        diff = _run(["git", "show", "--stat", "--format=%s", "HEAD"], roadmap_dir).stdout
+        diff = _run(
+            ["git", "show", "--stat", "--format=%s", "HEAD"], roadmap_dir
+        ).stdout
         print(f"[dry-run] branch {branch}\n{diff}")
         return 0
 
@@ -483,14 +597,22 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
     # Resolved here, after the dry-run return, because it can create a fork as a side effect.
     remote, fork_owner = push_target(roadmap_dir)
     if remote_branch_exists(roadmap_dir, branch, remote):
-        print(f"branch {branch} already exists on {remote} (an earlier run was interrupted); "
-              f"opening the pull request for it rather than rewriting it")
+        print(
+            f"branch {branch} already exists on {remote} (an earlier run was interrupted); "
+            f"opening the pull request for it rather than rewriting it"
+        )
     else:
-        proc = _run(["git", "push", remote, f"HEAD:refs/heads/{branch}"], roadmap_dir, check=False)
+        proc = _run(
+            ["git", "push", remote, f"HEAD:refs/heads/{branch}"],
+            roadmap_dir,
+            check=False,
+        )
         if proc.returncode != 0:
             # Most likely a peer created the same branch between the check and the push. That is fine:
             # fall through and let the pull-request step reconcile.
-            print(f"create-only push declined ({proc.stderr.strip()[:200]}); reconciling instead")
+            print(
+                f"create-only push declined ({proc.stderr.strip()[:200]}); reconciling instead"
+            )
 
     # Re-check between push and create: another worker may have opened the PR for this exact window
     # in the meantime, and the branch name is deterministic so it would be the same branch.
@@ -506,10 +628,22 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
         print(f"another worker opened it first: {pr['url']}")
         return EX_NOPROGRESS
 
-    out = gh.gh([
-        "pr", "create", "--repo", gh.ROADMAP_REPO, "--base", "main", "--head", head,
-        "--title", title, "--body", body,
-    ])
+    out = gh.gh(
+        [
+            "pr",
+            "create",
+            "--repo",
+            gh.ROADMAP_REPO,
+            "--base",
+            "main",
+            "--head",
+            head,
+            "--title",
+            title,
+            "--body",
+            body,
+        ]
+    )
     print(out.strip())
 
     # Only now that ours is open: sweep the area's dead and superseded reports. Ordered this way so
@@ -522,7 +656,13 @@ def run(plan, status_body_file, section_body_file, roadmap_dir, dry_run=False, v
     # fresh one that also cannot merge, since the planner's staleness expiry stops the previous one
     # marking the area in flight. Neither ever closes itself. See `superseded_prs`.
     try:
-        sweep(plan, branch, out.strip().splitlines()[-1] if out.strip() else "the new report")
+        sweep(
+            plan,
+            branch,
+            out.strip().splitlines()[-1] if out.strip() else "the new report",
+        )
     except gh.GhError as exc:
-        print(f"could not sweep superseded reports ({exc}); the new report is open regardless")
+        print(
+            f"could not sweep superseded reports ({exc}); the new report is open regardless"
+        )
     return 0

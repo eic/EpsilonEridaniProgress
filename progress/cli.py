@@ -91,12 +91,16 @@ def cmd_facts(args):
     p = _load_plan(args.plan)
     # The plan's PR list is the area filter. Without it `collect` would walk every merged PR in the
     # commit range, so a report on one roadmap would be grounded in every roadmap's work.
-    result = facts.collect(args.code_dir, p["from_sha"], p["to_sha"], pr_numbers=p["prs"])
+    result = facts.collect(
+        args.code_dir, p["from_sha"], p["to_sha"], pr_numbers=p["prs"]
+    )
     out = json.dumps(result, indent=2, sort_keys=True)
     if args.out:
         pathlib.Path(args.out).write_text(out + "\n", encoding="utf-8")
-        print(f"wrote {args.out}: {len(result['declarations'])} declaration(s) "
-              f"in {len(result['files'])} file(s)")
+        print(
+            f"wrote {args.out}: {len(result['declarations'])} declaration(s) "
+            f"in {len(result['files'])} file(s)"
+        )
     else:
         print(out)
     return 0
@@ -129,26 +133,46 @@ def cmd_announce(args):
 
 
 def build_parser():
-    ap = argparse.ArgumentParser(prog="epsiloneridani-progress", description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        prog="epsiloneridani-progress",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     d = sub.add_parser("due", help="is an update due? (one API call, no clone)")
-    d.add_argument("--idle-hours", type=float, default=None,
-                   help="hours of quiet required (default 8)")
-    d.add_argument("--limit", type=int, default=30,
-                   help="how many roadmap commits to inspect (default 30)")
+    d.add_argument(
+        "--idle-hours",
+        type=float,
+        default=None,
+        help="hours of quiet required (default 8)",
+    )
+    d.add_argument(
+        "--limit",
+        type=int,
+        default=30,
+        help="how many roadmap commits to inspect (default 30)",
+    )
     d.set_defaults(fn=cmd_due)
 
     p = sub.add_parser("plan", help="pick the roadmap and the PR window")
-    p.add_argument("--roadmap-dir", required=True, help="a EpsilonEridaniRoadmaps checkout")
-    p.add_argument("--code-dir", required=True, help="a full-history EpsilonEridani checkout")
-    p.add_argument("--ref", default=None,
-                   help="the code ref to read (default: the docs-tracking branch, origin/docgen)")
+    p.add_argument(
+        "--roadmap-dir", required=True, help="a EpsilonEridaniRoadmaps checkout"
+    )
+    p.add_argument(
+        "--code-dir", required=True, help="a full-history EpsilonEridani checkout"
+    )
+    p.add_argument(
+        "--ref",
+        default=None,
+        help="the code ref to read (default: the docs-tracking branch, origin/docgen)",
+    )
     p.add_argument("--idle-hours", type=float, default=None)
     p.add_argument("--min-prs", type=int, default=None)
     p.add_argument("--area", default=None, help="force a single area (testing)")
-    p.add_argument("--out", default=None, help="write the plan JSON here instead of stdout")
+    p.add_argument(
+        "--out", default=None, help="write the plan JSON here instead of stdout"
+    )
     p.set_defaults(fn=cmd_plan)
 
     f = sub.add_parser("facts", help="what declarations landed in the window")
@@ -159,20 +183,37 @@ def build_parser():
 
     a = sub.add_parser("apply", help="write the files and open the PR")
     a.add_argument("--plan", required=True)
-    a.add_argument("--status-body", required=True, help="file holding the model's STATUS prose")
-    a.add_argument("--section-body", required=True, help="file holding the model's section prose")
-    a.add_argument("--roadmap-dir", required=True, help="a writable EpsilonEridaniRoadmaps clone")
-    a.add_argument("--version", default=None, help="the EpsilonEridaniProgress SHA to record in the PR")
-    a.add_argument("--dry-run", action="store_true", help="produce the commit, push nothing")
+    a.add_argument(
+        "--status-body", required=True, help="file holding the model's STATUS prose"
+    )
+    a.add_argument(
+        "--section-body", required=True, help="file holding the model's section prose"
+    )
+    a.add_argument(
+        "--roadmap-dir", required=True, help="a writable EpsilonEridaniRoadmaps clone"
+    )
+    a.add_argument(
+        "--version",
+        default=None,
+        help="the EpsilonEridaniProgress SHA to record in the PR",
+    )
+    a.add_argument(
+        "--dry-run", action="store_true", help="produce the commit, push nothing"
+    )
     a.set_defaults(fn=cmd_apply)
 
-    pr = sub.add_parser("prompt", help="print a writing prompt, for the worker to fill in")
+    pr = sub.add_parser(
+        "prompt", help="print a writing prompt, for the worker to fill in"
+    )
     # A plain string, not `choices=`: that would enumerate the directory at import time, so a build
     # that shipped no prompts would fail while merely parsing `--help`. `cmd_prompt` reports a
     # missing prompt properly.
-    pr.add_argument("name", help="which prompt: progress (the worker's two-file prompt, with the "
-                    "per-layer coverage block) or status (a standalone prose-only STATUS body, "
-                    "which yields a report with no coverage header)")
+    pr.add_argument(
+        "name",
+        help="which prompt: progress (the worker's two-file prompt, with the "
+        "per-layer coverage block) or status (a standalone prose-only STATUS body, "
+        "which yields a report with no coverage header)",
+    )
     pr.set_defaults(fn=cmd_prompt)
 
     n = sub.add_parser("announce", help="post a section to Zulip")

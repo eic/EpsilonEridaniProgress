@@ -172,7 +172,7 @@ jobs:
           # Best effort. A refusal is a normal outcome, so failing to describe it must not turn the
           # run red -- the verdict is already recorded in the job output either way.
           gh pr comment "$PR" --repo "$REPO" --body-file refusal.md \
-            || echo "::warning title=refusal not posted::could not comment on #$PR" 
+            || echo "::warning title=refusal not posted::could not comment on #$PR"
 
   merge:
     needs: validate

@@ -62,11 +62,22 @@ def changed_lean_files(repo_dir, commits):
     files = set()
     for commit in commits:
         out = window.git(
-            ["diff", "--name-only", "--diff-filter=AMR", f"{commit}^", commit, "--", LEAN_PREFIX],
+            [
+                "diff",
+                "--name-only",
+                "--diff-filter=AMR",
+                f"{commit}^",
+                commit,
+                "--",
+                LEAN_PREFIX,
+            ],
             repo_dir,
         )
-        files.update(p for p in (line.strip() for line in out.splitlines())
-                     if p.endswith(LEAN_SUFFIX))
+        files.update(
+            p
+            for p in (line.strip() for line in out.splitlines())
+            if p.endswith(LEAN_SUFFIX)
+        )
     return sorted(files)
 
 
@@ -149,14 +160,19 @@ def collect(repo_dir, from_sha, to_sha, pr_numbers=None, docs=None):
                 f"{from_sha[:7]}; there is nothing documented to report yet"
             )
 
-    numbers = (window.window_prs(repo_dir, from_sha, docs_sha)
-               if pr_numbers is None else list(pr_numbers))
+    numbers = (
+        window.window_prs(repo_dir, from_sha, docs_sha)
+        if pr_numbers is None
+        else list(pr_numbers)
+    )
     wanted = set(numbers)
 
     # Which commit belongs to which PR, so a blamed line can be attributed.
     pr_of_commit = {}
-    log = window.git(["log", "--first-parent", "--format=%H%x09%s", f"{from_sha}..{docs_sha}"],
-                     repo_dir)
+    log = window.git(
+        ["log", "--first-parent", "--format=%H%x09%s", f"{from_sha}..{docs_sha}"],
+        repo_dir,
+    )
     for line in log.splitlines():
         sha, _, subject = line.partition("\t")
         n = window.pr_number_of_subject(subject.strip())
@@ -221,8 +237,13 @@ def collect(repo_dir, from_sha, to_sha, pr_numbers=None, docs=None):
         names = sorted(per_pr.get(number, []))
         keep = names[:MAX_DECLS_PER_PR]
         dropped += len(names) - len(keep)
-        prs.append({"number": number, "declarations": keep,
-                    "truncated_declarations": len(names) - len(keep)})
+        prs.append(
+            {
+                "number": number,
+                "declarations": keep,
+                "truncated_declarations": len(names) - len(keep),
+            }
+        )
 
     # Documented declarations first: one is more likely to be a result worth naming than an
     # undocumented helper. A presentation order, not a judgement.

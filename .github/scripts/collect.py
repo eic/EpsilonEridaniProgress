@@ -34,7 +34,6 @@ import base64
 import datetime
 import json
 import pathlib
-import re
 import subprocess
 import tempfile
 import sys
@@ -76,7 +75,9 @@ def gh_api_paged(path):
     replacement silently rewrites the data rather than failing. Decode the documents properly
     instead, which is exact and does not depend on the `gh` version having `--slurp`.
     """
-    proc = subprocess.run(["gh", "api", "--paginate", path], capture_output=True, text=True)
+    proc = subprocess.run(
+        ["gh", "api", "--paginate", path], capture_output=True, text=True
+    )
     if proc.returncode != 0:
         raise CollectError(f"gh api --paginate {path} failed: {proc.stderr.strip()}")
     text = proc.stdout.strip()
@@ -88,9 +89,13 @@ def gh_api_paged(path):
         try:
             page, end = decoder.raw_decode(text, idx)
         except json.JSONDecodeError as exc:
-            raise CollectError(f"could not parse paginated output of {path}: {exc}") from exc
+            raise CollectError(
+                f"could not parse paginated output of {path}: {exc}"
+            ) from exc
         if not isinstance(page, list):
-            raise CollectError(f"{path} returned a {type(page).__name__}, expected a list")
+            raise CollectError(
+                f"{path} returned a {type(page).__name__}, expected a list"
+            )
         out.extend(page)
         idx = end
         while idx < len(text) and text[idx].isspace():
@@ -105,7 +110,9 @@ def gh_api_paged_field(path, field):
     pages are concatenated JSON *objects*. Same decoding discipline as `gh_api_paged`; only the
     unwrapping differs.
     """
-    proc = subprocess.run(["gh", "api", "--paginate", path], capture_output=True, text=True)
+    proc = subprocess.run(
+        ["gh", "api", "--paginate", path], capture_output=True, text=True
+    )
     if proc.returncode != 0:
         raise CollectError(f"gh api --paginate {path} failed: {proc.stderr.strip()}")
     text = proc.stdout.strip()
@@ -117,9 +124,13 @@ def gh_api_paged_field(path, field):
         try:
             page, end = decoder.raw_decode(text, idx)
         except json.JSONDecodeError as exc:
-            raise CollectError(f"could not parse paginated output of {path}: {exc}") from exc
+            raise CollectError(
+                f"could not parse paginated output of {path}: {exc}"
+            ) from exc
         if not isinstance(page, dict):
-            raise CollectError(f"{path} returned a {type(page).__name__}, expected an object")
+            raise CollectError(
+                f"{path} returned a {type(page).__name__}, expected an object"
+            )
         out.extend(page.get(field) or [])
         idx = end
         while idx < len(text) and text[idx].isspace():
@@ -142,8 +153,15 @@ def blob_text(repo, sha):
 def file_at(repo, ref, path):
     """A file's text at an exact ref, or None when it does not exist there."""
     proc = subprocess.run(
-        ["gh", "api", f"repos/{repo}/contents/{path}?ref={ref}", "--jq", ".content,.encoding"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "api",
+            f"repos/{repo}/contents/{path}?ref={ref}",
+            "--jq",
+            ".content,.encoding",
+        ],
+        capture_output=True,
+        text=True,
     )
     if proc.returncode != 0:
         if "Not Found" in (proc.stderr or ""):
@@ -165,12 +183,20 @@ def last_commit_date(repo, ref, path):
     reflects reports that actually landed rather than anything the pull request claims.
     """
     proc = subprocess.run(
-        ["gh", "api", f"repos/{repo}/commits?sha={ref}&path={path}&per_page=1",
-         "--jq", ".[0].commit.committer.date"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "api",
+            f"repos/{repo}/commits?sha={ref}&path={path}&per_page=1",
+            "--jq",
+            ".[0].commit.committer.date",
+        ],
+        capture_output=True,
+        text=True,
     )
     if proc.returncode != 0:
-        raise CollectError(f"reading the history of {path} failed: {proc.stderr.strip()}")
+        raise CollectError(
+            f"reading the history of {path} failed: {proc.stderr.strip()}"
+        )
     out = proc.stdout.strip()
     return out if out and out != "null" else None
 
@@ -179,7 +205,8 @@ def rev_parse(repo, ref):
     """Resolve a ref to an immutable commit SHA, or None if it cannot be read."""
     proc = subprocess.run(
         ["gh", "api", f"repos/{repo}/commits/{ref}", "--jq", ".sha"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     return proc.stdout.strip() or None if proc.returncode == 0 else None
 
@@ -206,9 +233,23 @@ def bootstrap_cursor(area, repo=CODE_REPO, ref=CODE_REF):
     executed.
     """
     proc = subprocess.run(
-        ["gh", "pr", "list", "--repo", repo, "--state", "merged",
-         "--label", f"{ROADMAP_LABEL_PREFIX}{area}", "--limit", "100000", "--json", "number"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "pr",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "merged",
+            "--label",
+            f"{ROADMAP_LABEL_PREFIX}{area}",
+            "--limit",
+            "100000",
+            "--json",
+            "number",
+        ],
+        capture_output=True,
+        text=True,
     )
     if proc.returncode != 0:
         return None
@@ -222,9 +263,20 @@ def bootstrap_cursor(area, repo=CODE_REPO, ref=CODE_REF):
     with tempfile.TemporaryDirectory() as tmp:
         clone = pathlib.Path(tmp) / "code"
         cloned = subprocess.run(
-            ["git", "clone", "--filter=blob:none", "--no-checkout", "--single-branch",
-             "--branch", ref, "-q", f"https://github.com/{repo}", str(clone)],
-            capture_output=True, text=True,
+            [
+                "git",
+                "clone",
+                "--filter=blob:none",
+                "--no-checkout",
+                "--single-branch",
+                "--branch",
+                ref,
+                "-q",
+                f"https://github.com/{repo}",
+                str(clone),
+            ],
+            capture_output=True,
+            text=True,
         )
         if cloned.returncode != 0:
             return None
@@ -249,13 +301,16 @@ def compare_status(repo, base, head):
     """
     proc = subprocess.run(
         ["gh", "api", f"repos/{repo}/compare/{base}...{head}", "--jq", ".status"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     if proc.returncode != 0:
         err = proc.stderr or ""
         if "Not Found" in err or "404" in err:
             return None
-        raise CollectError(f"comparing {base[:7]}...{head[:7]} in {repo} failed: {err.strip()}")
+        raise CollectError(
+            f"comparing {base[:7]}...{head[:7]} in {repo} failed: {err.strip()}"
+        )
     return proc.stdout.strip() or None
 
 
@@ -293,8 +348,15 @@ def resolve_window(new_progress, repo=CODE_REPO, ref=CODE_REF):
     # the answer, and records nothing about what was actually consulted.
     tip = rev_parse(repo, ref)
     if tip is None:
-        return {"repo": repo, "ref": ref, "ref_sha": None, "from_sha": from_sha, "to_sha": to_sha,
-                "to_reachable": False, "advances": None}
+        return {
+            "repo": repo,
+            "ref": ref,
+            "ref_sha": None,
+            "from_sha": from_sha,
+            "to_sha": to_sha,
+            "to_reachable": False,
+            "advances": None,
+        }
     reach = compare_status(repo, to_sha, tip)
     to_reachable = reach in ("ahead", "identical")
 
@@ -304,8 +366,15 @@ def resolve_window(new_progress, repo=CODE_REPO, ref=CODE_REF):
         # or sideways.
         advances = compare_status(repo, from_sha, to_sha) == "ahead"
 
-    return {"repo": repo, "ref": ref, "ref_sha": tip, "from_sha": from_sha, "to_sha": to_sha,
-            "to_reachable": to_reachable, "advances": advances}
+    return {
+        "repo": repo,
+        "ref": ref,
+        "ref_sha": tip,
+        "from_sha": from_sha,
+        "to_sha": to_sha,
+        "to_reachable": to_reachable,
+        "advances": advances,
+    }
 
 
 def main(argv=None):
@@ -325,7 +394,6 @@ def main(argv=None):
     if not main_sha:
         raise CollectError(f"could not resolve {args.base_branch}")
 
-
     # The area comes from the branch and is validated by the gate's own pattern. Reading it here with
     # the gate's regex keeps the two from disagreeing.
     branch = (pr.get("head") or {}).get("ref") or ""
@@ -333,7 +401,9 @@ def main(argv=None):
     area = m.group(3) if m else ""
 
     # ----- the diff, between exactly those two commits -----------------------------------------
-    cmp_data = gh_api(f"repos/{args.repo}/compare/{main_sha}...{head_sha}?per_page={MAX_COMPARE_FILES}")
+    cmp_data = gh_api(
+        f"repos/{args.repo}/compare/{main_sha}...{head_sha}?per_page={MAX_COMPARE_FILES}"
+    )
     changed = cmp_data.get("files") or []
     if len(changed) >= MAX_COMPARE_FILES:
         raise CollectError(
@@ -346,9 +416,18 @@ def main(argv=None):
     tree = gh_api(f"repos/{args.repo}/git/trees/{head_sha}?recursive=1")
     if tree.get("truncated"):
         raise CollectError("the head tree was truncated; modes cannot be confirmed")
-    wanted = {f.get("filename") or "" for f in changed if gate.PATH_RE.match(f.get("filename") or "")}
+    wanted = {
+        f.get("filename") or ""
+        for f in changed
+        if gate.PATH_RE.match(f.get("filename") or "")
+    }
     tree_entries = [
-        {"path": e.get("path"), "mode": e.get("mode"), "type": e.get("type"), "sha": e.get("sha")}
+        {
+            "path": e.get("path"),
+            "mode": e.get("mode"),
+            "type": e.get("type"),
+            "sha": e.get("sha"),
+        }
         for e in (tree.get("tree") or [])
         if e.get("path") in wanted
     ]
@@ -382,7 +461,9 @@ def main(argv=None):
     parents = {gate.PATH_RE.match(p).group(1) for p in by_path}
     if len(parents) > 1:
         # The gate refuses this too, but collecting a baseline would mean choosing one arbitrarily.
-        raise CollectError(f"the diff spans {sorted(parents)}; it must touch one directory")
+        raise CollectError(
+            f"the diff spans {sorted(parents)}; it must touch one directory"
+        )
     if area and parents:
         parent = parents.pop()
         old_paths = {
@@ -396,7 +477,9 @@ def main(argv=None):
         # A roadmap is a directory with a README.md, the same rule the planner uses. Reports may only
         # be added to one that already exists, or invented area names would give unlimited
         # "first reports", each exempt from the cadence limit.
-        area_exists = file_at(args.repo, main_sha, f"{parent}/{area}/README.md") is not None
+        area_exists = (
+            file_at(args.repo, main_sha, f"{parent}/{area}/README.md") is not None
+        )
         if old_progress:
             try:
                 current_cursor = files.cursor(old_progress)
@@ -411,17 +494,20 @@ def main(argv=None):
     # collected: any repository writer can POST one under any context, so they are not evidence, and
     # the gate refuses them if they somehow appear.
     check_runs = []
-    runs = gh_api_paged_field(f"repos/{args.repo}/commits/{head_sha}/check-runs?per_page=100",
-                              "check_runs")
+    runs = gh_api_paged_field(
+        f"repos/{args.repo}/commits/{head_sha}/check-runs?per_page=100", "check_runs"
+    )
     for run in runs:
-        check_runs.append({
-            "name": run.get("name"),
-            "head_sha": head_sha,
-            "conclusion": run.get("conclusion"),
-            "status": run.get("status"),
-            "app_id": ((run.get("app") or {}).get("id")),
-            "source": "check_run",
-        })
+        check_runs.append(
+            {
+                "name": run.get("name"),
+                "head_sha": head_sha,
+                "conclusion": run.get("conclusion"),
+                "status": run.get("status"),
+                "app_id": ((run.get("app") or {}).get("id")),
+                "source": "check_run",
+            }
+        )
 
     bundle = {
         "base_repo": args.repo,
@@ -449,8 +535,10 @@ def main(argv=None):
         "check_runs": check_runs,
     }
     pathlib.Path(args.out).write_text(json.dumps(bundle, indent=2), encoding="utf-8")
-    print(f"collected: area={area or '(none)'} head={head_sha[:7]} main={main_sha[:7]} "
-          f"status={status} behind={behind} files={len(changed)} checks={len(check_runs)}")
+    print(
+        f"collected: area={area or '(none)'} head={head_sha[:7]} main={main_sha[:7]} "
+        f"status={status} behind={behind} files={len(changed)} checks={len(check_runs)}"
+    )
     return 0
 
 

@@ -48,8 +48,12 @@ def layer_id(title):
 def headings(readme):
     """`[{id, title, line}]` for a README's layer headings, in order, 1-based lines, trailing
     parentheticals dropped. Empty when the README names its milestones some other way."""
+
     def scan(rx):
-        return [(m.group(1), readme.count("\n", 0, m.start()) + 1) for m in rx.finditer(readme)]
+        return [
+            (m.group(1), readme.count("\n", 0, m.start()) + 1)
+            for m in rx.finditer(readme)
+        ]
 
     found = scan(_WORD_HEADING_RE) or scan(_SHORT_HEADING_RE) or scan(_BULLET_RE)
     out, seen = [], set()
@@ -79,17 +83,23 @@ def split_block(body):
     close = BLOCK_CLOSE_RE.search(body, start.end())
     if close is None:
         raise files.FormatError("the ```coverage block is not closed")
-    if body[close.end():].strip():
-        raise files.FormatError("the ```coverage block must be the last thing in the status body")
+    if body[close.end() :].strip():
+        raise files.FormatError(
+            "the ```coverage block must be the last thing in the status body"
+        )
     try:
-        entries = json.loads(body[start.end():close.start()])
+        entries = json.loads(body[start.end() : close.start()])
     except json.JSONDecodeError as exc:
-        raise files.FormatError(f"the ```coverage block is not valid JSON: {exc}") from exc
+        raise files.FormatError(
+            f"the ```coverage block is not valid JSON: {exc}"
+        ) from exc
     # `None` is how this function says "no block", so a block holding JSON `null` must not decode
     # to it: the caller would take a present, malformed block for an absent one and drop it.
     if entries is None:
-        raise files.FormatError("the ```coverage block holds JSON null, not an assessment")
-    return body[:start.start()].rstrip() + "\n", entries
+        raise files.FormatError(
+            "the ```coverage block holds JSON null, not an assessment"
+        )
+    return body[: start.start()].rstrip() + "\n", entries
 
 
 def coverage(area, to_sha, readme_hash, layers, entries, child=None):
@@ -102,12 +112,21 @@ def coverage(area, to_sha, readme_hash, layers, entries, child=None):
     """
     roadmap = area if child is None else files.sub_roadmap_id(area, child)
     validated = files.require_coverage(
-        {"roadmap": roadmap, "to_sha": to_sha, "readme_sha": readme_hash, "layers": entries},
-        area, to_sha, child,
+        {
+            "roadmap": roadmap,
+            "to_sha": to_sha,
+            "readme_sha": readme_hash,
+            "layers": entries,
+        },
+        area,
+        to_sha,
+        child,
     )
     where = "" if child is None else f"{roadmap}: "
     ids = [layer["id"] for layer in layers]
-    by_id = {entry["id"]: entry for entry in validated["layers"]}  # ids are unique: validated above
+    by_id = {
+        entry["id"]: entry for entry in validated["layers"]
+    }  # ids are unique: validated above
     unknown = [i for i in by_id if i not in ids]
     missing = [i for i in ids if i not in by_id]
     if unknown:
@@ -116,7 +135,9 @@ def coverage(area, to_sha, readme_hash, layers, entries, child=None):
             f"the README's layer ids are {ids}"
         )
     if missing:
-        raise files.FormatError(f"{where}the coverage block says nothing about layer(s) {missing}")
+        raise files.FormatError(
+            f"{where}the coverage block says nothing about layer(s) {missing}"
+        )
     validated["layers"] = [by_id[i] for i in ids]
     return validated
 
@@ -146,12 +167,25 @@ def coverage_block(area, to_sha, readme_hash, layers, sub_roadmaps, block):
     unknown = [key for key in block if key not in expected]
     missing = [key for key in expected if key not in block]
     if unknown:
-        raise files.FormatError(f"the coverage block names roadmap(s) the plan does not list: {unknown}")
+        raise files.FormatError(
+            f"the coverage block names roadmap(s) the plan does not list: {unknown}"
+        )
     if missing:
-        raise files.FormatError(f"the coverage block says nothing about roadmap(s) {missing}")
+        raise files.FormatError(
+            f"the coverage block says nothing about roadmap(s) {missing}"
+        )
     own = coverage(area, to_sha, readme_hash, layers, block[area]) if layers else None
     subs = []
     for sub in sorted(sub_roadmaps, key=lambda sub: sub["roadmap"]):
         child = files.coverage_roadmap(sub["roadmap"], area)
-        subs.append(coverage(area, to_sha, sub["readme_sha"], sub["layers"], block[sub["roadmap"]], child))
+        subs.append(
+            coverage(
+                area,
+                to_sha,
+                sub["readme_sha"],
+                sub["layers"],
+                block[sub["roadmap"]],
+                child,
+            )
+        )
     return own, subs
