@@ -5,4 +5,4 @@
 # Moving scripts out of TauCeti's human-owned `scripts/` directory must not quietly de-trust
 # them.
 
-*   @TauCetiProject/humans
+*   @eic/epsilon-eridani-humans
