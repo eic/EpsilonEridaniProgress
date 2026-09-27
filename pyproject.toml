@@ -1,6 +1,6 @@
 [project]
 name = "epsiloneridani-progress"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Decide, generate, and publish per-roadmap progress reports for EpsilonEridani."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,8 +13,10 @@ dependencies = []
 epsiloneridani-progress = "progress.cli:main"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
 
 [tool.setuptools]
 packages = ["progress"]
