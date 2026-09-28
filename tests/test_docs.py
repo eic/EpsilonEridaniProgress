@@ -59,7 +59,7 @@ INDEX = json.dumps(
     {
         "declarations": {
             "EpsilonEridani.IsFredholm": {
-                "docLink": "./EpsilonEridani/Analysis/Fredholm/Basic.html#EpsilonEridani.IsFredholm",
+                "docLink": "./EpsilonEridani/Particles/Parton/PDF/Basic.html#EpsilonEridani.IsFredholm",
                 "kind": "structure",
             },
         },
@@ -69,12 +69,12 @@ INDEX = json.dumps(
 
 
 def test_declarations_are_read_from_real_markup():
-    d = make({"EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE})
-    got = d.declarations("EpsilonEridani/Analysis/Fredholm/Basic.html")
+    d = make({"EpsilonEridani/Particles/Parton/PDF/Basic.html": PAGE})
+    got = d.declarations("EpsilonEridani/Particles/Parton/PDF/Basic.html")
     assert "EpsilonEridani.IsFredholm" in got, sorted(got)
     e = got["EpsilonEridani.IsFredholm"]
     assert e["kind"] == "structure", e
-    assert e["file"] == "EpsilonEridani/Analysis/Fredholm/Basic.lean", e
+    assert e["file"] == "EpsilonEridani/Particles/Parton/PDF/Basic.lean", e
     assert e["start"] == 61 and e["end"] == 73, e
     assert len(e["commit"]) == 40, e
     assert e["url"].endswith("Basic.html#EpsilonEridani.IsFredholm"), e
@@ -92,7 +92,7 @@ def test_every_declaration_block_is_found():
 def test_source_commit_comes_from_the_page():
     d = make(
         {
-            "EpsilonEridani/Analysis/Fredholm/Basic.html": PAGE,
+            "EpsilonEridani/Particles/Parton/PDF/Basic.html": PAGE,
             docs_mod.INDEX_PATH: INDEX,
         }
     )
@@ -105,7 +105,7 @@ def test_index_is_parsed_and_maps_names_to_pages():
     d = make({docs_mod.INDEX_PATH: INDEX})
     assert (
         d.module_of("EpsilonEridani.IsFredholm")
-        == "EpsilonEridani/Analysis/Fredholm/Basic.html"
+        == "EpsilonEridani/Particles/Parton/PDF/Basic.html"
     )
     assert d.module_of("Nope.Missing") is None
 
