@@ -67,8 +67,8 @@ angle brackets, at the end of its entry; the previous `STATUS.md` may also conta
 results. Link every selected named result and notable definition whose URL appears in that supplied
 material. Use a markdown link whose target is that URL, copied exactly:
 
-    the **Hungerbühler-Wasem residue theorem**
-    ([`residue_theorem_of_generalized_winding`](https://epsiloneridaniproject.github.io/EpsilonEridani/docs/EpsilonEridani/Analysis/Contour/Residue/Generalized.html#EpsilonEridani.Contour.residue_theorem_of_generalized_winding))
+    the **polynomiality degree bound for GPD moments**
+    ([`momentPolynomial_natDegree_le`](https://eic.github.io/EpsilonEridani/docs/EpsilonEridani/Particles/Parton/GPD/Polynomiality.html#EpsilonEridani.Particles.Parton.GPD.momentPolynomial_natDegree_le))
 
 Rules:
 
