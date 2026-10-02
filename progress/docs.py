@@ -34,7 +34,15 @@ import time
 import urllib.error
 import urllib.request
 
-DOCS_BASE = "https://epsiloneridaniproject.github.io/EpsilonEridani/docs"
+# Where doc-gen4's output for EpsilonEridani is published (GitHub Pages of eic/EpsilonEridani).
+#
+# A dead address here does not fail loudly: `plan` reads it to find the commit the site describes,
+# gets nothing, and reports "not due" -- so the fleet sits on "due: no progress update has ever
+# landed" for ever while every progress round ends in seconds. That is what the pre-move address
+# (the `epsiloneridaniproject` organization's Pages host, a 404 since the repository moved to eic)
+# did. $TAUCETI_DOCS_BASE overrides it, so the next move needs a config change rather than a
+# release.
+DOCS_BASE = os.environ.get("TAUCETI_DOCS_BASE") or "https://eic.github.io/EpsilonEridani/docs"
 INDEX_PATH = "declarations/declaration-data.bmp"
 
 # How long a cached page may be reused across runs.

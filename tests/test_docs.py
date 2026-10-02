@@ -296,6 +296,44 @@ def test_a_site_redeploying_under_a_run_is_refused():
             raise AssertionError("expected a DocsError for a page from another build")
 
 
+
+def test_the_default_site_is_the_live_eic_pages_address():
+    """The site moved with the repository to the eic organization. The pre-move host 404s, and a
+    dead base reads as "not due" rather than as an error, so pin the live one here."""
+    if os.environ.get("TAUCETI_DOCS_BASE"):
+        return  # an operator override is in force; the default is not what this process uses
+    assert docs_mod.DOCS_BASE == "https://eic.github.io/EpsilonEridani/docs", docs_mod.DOCS_BASE
+    assert Docs().base == docs_mod.DOCS_BASE
+
+
+def test_the_site_can_be_overridden_from_the_environment():
+    """$TAUCETI_DOCS_BASE replaces the default, so another move is a config change, not a release."""
+    import subprocess
+
+    code = "from progress import docs; print(docs.DOCS_BASE); print(docs.Docs().base)"
+    env = {**os.environ, "TAUCETI_DOCS_BASE": "https://example.org/site/docs/"}
+    out = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=pathlib.Path(__file__).resolve().parents[1],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert out == ["https://example.org/site/docs/", "https://example.org/site/docs"], out
+
+
+def test_no_shipped_file_points_at_the_pre_move_host():
+    """The status prompt shows the model a sample link to copy; a sample on a dead host teaches it
+    to write dead links. Nothing the package ships should name the old host."""
+    root = pathlib.Path(docs_mod.__file__).resolve().parent
+    stale = [
+        str(f.relative_to(root))
+        for f in root.rglob("*")
+        if f.is_file() and f.suffix in (".py", ".md") and "epsiloneridaniproject.github.io" in f.read_text("utf-8")
+    ]
+    assert not stale, stale
+
 for _name, _fn in sorted(globals().items()):
     if _name.startswith("test_") and callable(_fn):
         check(_name, _fn)
