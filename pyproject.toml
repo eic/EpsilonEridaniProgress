@@ -5,15 +5,41 @@ description = "Decide, generate, and publish per-roadmap progress reports for Ep
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Wouter Deconinck" }]
+keywords = ["lean", "lean4", "mathlib", "formalization", "roadmap", "progress-report", "zulip"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Documentation",
+]
 # No Python dependencies: like the review engine, this shells out to the `git` and `gh`
 # CLIs, and talks to Zulip over the standard library.
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/eic/EpsilonEridaniProgress"
+Source = "https://github.com/eic/EpsilonEridaniProgress"
+Issues = "https://github.com/eic/EpsilonEridaniProgress/issues"
+Changelog = "https://github.com/eic/EpsilonEridaniProgress/releases"
 
 [project.scripts]
 epsiloneridani-progress = "progress.cli:main"
 
 [build-system]
-requires = ["setuptools>=68", "setuptools_scm[toml]>=8"]
+# setuptools 77 is the first to accept `license` as an SPDX expression and `license-files` (PEP 639).
+requires = ["setuptools>=77", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
