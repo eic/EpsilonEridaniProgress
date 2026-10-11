@@ -19,7 +19,7 @@ on:
   workflow_call:
     inputs:
       progress_ref:
-        description: The EpsilonEridaniProgress ref to run (must equal the `uses:` SHA).
+        description: The EpsilonEridaniProgress ref to run (must equal the `uses:` SHA; callers read it from that line, see roadmap-workflows/actions/progress-pin).
         required: true
         type: string
       channel:

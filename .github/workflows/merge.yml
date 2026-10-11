@@ -34,7 +34,7 @@ on:
         required: true
         type: number
       progress_ref:
-        description: The EpsilonEridaniProgress ref to validate with (must equal the `uses:` SHA).
+        description: The EpsilonEridaniProgress ref to validate with (must equal the `uses:` SHA; callers read it from that line, see roadmap-workflows/actions/progress-pin).
         required: true
         type: string
       client_id:

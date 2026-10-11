@@ -1,7 +1,9 @@
 name: tests
 
 # Byte-compile everything and run the plain-script test suites, matching EpsilonEridaniReview's minimal CI.
-# There is no test framework and no PyPI dependency: each tests/test_*.py exits non-zero on failure.
+# There is no test framework: each tests/test_*.py exits non-zero on failure. The one PyPI dependency
+# is PyYAML, for tests/test_roadmap_workflows.py (the roadmap-workflows/ templates against this
+# commit's reusable workflows); REQUIRE_YAML makes that suite fail rather than skip without it.
 
 on:
   push:
@@ -19,5 +21,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install PyYAML for tests/test_roadmap_workflows.py
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet PyYAML==6.0.2
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
       - name: Run the suites
+        env:
+          REQUIRE_YAML: "1"
         run: ./tests/run

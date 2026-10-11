@@ -22,11 +22,30 @@ permissions:
   contents: read
 
 jobs:
+  # `progress_ref` must name the same EpsilonEridaniProgress commit as the `uses:` pin below; it is
+  # read from that line at run time (.github/actions/progress-pin), so a Dependabot bump of the line
+  # is complete on its own.
+  pin:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.progress-pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          sparse-checkout: .github
+          persist-credentials: false
+      - id: progress-pin
+        uses: ./.github/actions/progress-pin
+        with:
+          workflow: progress-announce.yml
+
   announce:
-    # Same full SHA as progress-merge.yml uses; bump both together.
+    needs: pin
+    # Same full SHA as progress-merge.yml uses; Dependabot bumps both together (one group).
     uses: eic/EpsilonEridaniProgress/.github/workflows/announce.yml@REPLACE_WITH_FULL_SHA
     with:
-      progress_ref: REPLACE_WITH_FULL_SHA
+      progress_ref: ${{ needs.pin.outputs.sha }}
       channel: EpsilonEridani
       topic: Progress logs
     secrets:

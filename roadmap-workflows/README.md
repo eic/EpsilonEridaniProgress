@@ -1,24 +1,45 @@
 # Workflows to install in EpsilonEridaniRoadmaps
 
-These two files belong in `EpsilonEridaniRoadmaps/.github/workflows/`, not here. They live in this repository
-so they are reviewed alongside the gate they call, and so the pinning discipline is visible in one
-place.
+These files belong in `EpsilonEridaniRoadmaps/.github/`, not here. They live in this repository so they
+are reviewed alongside the gate they call, and so the pinning discipline is visible in one place.
+`tests/test_roadmap_workflows.py` installs them into a scratch layout and checks that they call this
+commit's `merge.yml` and `announce.yml` correctly, so a change to either workflow's inputs or secrets
+fails here, in its own pull request.
+
+| Here | Installs to |
+| --- | --- |
+| `progress-merge.yml`, `progress-announce.yml` | `.github/workflows/` |
+| `progress-pins.yml` | `.github/workflows/` |
+| `actions/progress-pin/action.yml` | `.github/actions/progress-pin/action.yml` |
+| `scripts/check_progress_pins.py`, `scripts/test_check_progress_pins.py` | `.github/scripts/` |
 
 `/.github/` in EpsilonEridaniRoadmaps is owned by `@eic/humans`, so installing them is a
 deliberate human act.
 
 ## Installing
 
-1. Commit the two workflow files into `EpsilonEridaniRoadmaps/.github/workflows/`.
-2. Replace every `REPLACE_WITH_FULL_SHA` with the full 40-character SHA of the EpsilonEridaniProgress commit
-   you are pinning. Each file uses it **twice** — once in `uses:` and once in `progress_ref:` — and
-   both must be that same SHA. `uses:` selects the workflow definition; `progress_ref` selects the
-   validator code checked out inside it. A mismatch would validate with different rules than the ones
-   reviewed.
-3. Add the repository secrets `ZULIP_EMAIL`, `ZULIP_API_KEY`, and optionally `ZULIP_SITE`.
+1. Commit the files above into `EpsilonEridaniRoadmaps/.github/` at the paths shown.
+2. Replace `REPLACE_WITH_FULL_SHA` with the full 40-character SHA of the EpsilonEridaniProgress commit you
+   are pinning. It appears **once** per workflow, in `uses:`. `uses:` selects the workflow definition;
+   `progress_ref` selects the validator code checked out inside it, and must be the same commit, so it
+   is never written down: each workflow reads it from its own `uses:` line at run time
+   (`actions/progress-pin`, from the trusted `github.workflow_sha` copy of the file).
+3. Group the two pins in `.github/dependabot.yml`, so a bump moves both workflows together:
+
+   ```yaml
+   groups:
+     epsiloneridani-progress:
+       patterns:
+         - "eic/EpsilonEridaniProgress/*"
+   ```
+
+   Dependabot rewrites only `uses:` lines. With `progress_ref` derived, that bump is complete, and
+   `progress-pins.yml` checks the calls against the bumped workflows' inputs and secrets on the bump's
+   own pull request (the gate itself runs from the base branch, so it would only fail after merging).
+4. Add the repository secrets `ZULIP_EMAIL`, `ZULIP_API_KEY`, and optionally `ZULIP_SITE`.
    (`APP_ID` / `APP_PRIVATE_KEY` are already present, used by the existing `auto-merge.yml`.)
-4. Subscribe the Zulip bot to the **EpsilonEridani** channel.
-5. Add the machine-owned declaration to the repository `README.md` — see `readme-snippet.md`.
+5. Subscribe the Zulip bot to the **EpsilonEridani** channel.
+6. Add the machine-owned declaration to the repository `README.md` — see `readme-snippet.md`.
 
 ## Who may publish
 
@@ -64,9 +85,9 @@ Three places run EpsilonEridaniProgress code, and they must be the same commit:
 
 | Where | How it is pinned |
 | --- | --- |
-| `progress-merge.yml` / `progress-announce.yml` | `uses:` SHA and `progress_ref:` |
+| `progress-merge.yml` / `progress-announce.yml` | `uses:` SHA (Dependabot, one group) |
 | The worker's `apply`/`plan` invocation | `uvx --from git+…@<sha>` |
-| The validator checked out inside the reusable workflows | `progress_ref:` |
+| The validator checked out inside the reusable workflows | `progress_ref:`, read from the `uses:` SHA at run time |
 
 If the worker runs a newer version than the gate, it can emit headers the gate does not recognise and
 every report wedges. Bump them together, and note that `apply` records the version it ran in each

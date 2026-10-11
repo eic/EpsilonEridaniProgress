@@ -1,0 +1,33 @@
+name: EpsilonEridaniProgress pin
+description: >
+  Read the EpsilonEridaniProgress commit a workflow's reusable-workflow `uses:` line is pinned to, so
+  `progress_ref` always names the same commit. Dependabot rewrites only `uses:` lines; deriving
+  `progress_ref` from them keeps a Dependabot bump complete.
+  Requires the repository (at least `.github/`) checked out at `github.workspace` from a trusted ref.
+
+inputs:
+  workflow:
+    description: Workflow file under .github/workflows whose pin to read.
+    required: true
+
+outputs:
+  sha:
+    description: The pinned EpsilonEridaniProgress commit SHA.
+    value: ${{ steps.read.outputs.sha }}
+
+runs:
+  using: composite
+  steps:
+    - id: read
+      shell: bash
+      env:
+        WORKFLOW: ${{ inputs.workflow }}
+      run: |
+        set -euo pipefail
+        file="$GITHUB_WORKSPACE/.github/workflows/$WORKFLOW"
+        pins=$( (grep -oE 'uses:[[:space:]]+eic/EpsilonEridaniProgress/\.github/workflows/[^@[:space:]]+@[0-9a-f]{40}' "$file" || true) | sed 's/.*@//' | sort -u)
+        if [ -z "$pins" ] || [ "$(printf '%s\n' "$pins" | wc -l)" -ne 1 ]; then
+          echo "::error::expected exactly one EpsilonEridaniProgress pin in $WORKFLOW, found: ${pins:-none}"
+          exit 1
+        fi
+        echo "sha=$pins" >> "$GITHUB_OUTPUT"
