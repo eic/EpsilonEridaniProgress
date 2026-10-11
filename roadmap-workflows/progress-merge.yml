@@ -5,8 +5,8 @@ name: progress-merge
 # All the validation, and the merge itself, live in a SHA-pinned reusable workflow in
 # EpsilonEridaniProgress -- the same discipline EpsilonEridani uses for EpsilonEridaniReview, and for the same reason: an
 # unpinned `@main` would let an upstream change alter what is allowed to merge here without review.
-# The pin must be bumped deliberately, in step with the `progress_ref` input and with the version the
-# worker runs (see EpsilonEridaniProgress' README).
+# The pin must be bumped deliberately, in step with the version the worker runs (see
+# EpsilonEridaniProgress' README); `progress_ref` follows it on its own (read from the pin at run time).
 #
 # `pull_request_target` rather than `pull_request` so the App secrets are available for the events we
 # care about. That is safe here only because the called workflow never checks out or executes pull
@@ -47,7 +47,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       pr: ${{ steps.pick.outputs.pr }}
+      progress_ref: ${{ steps.progress-pin.outputs.sha }}
     steps:
+      # The trusted copy of this workflow file (the commit this run came from: the base branch for
+      # `pull_request_target`, the default branch otherwise), whose `uses:` pin below is the
+      # EpsilonEridaniProgress commit `progress_ref` must name. Never the pull request's content.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          sparse-checkout: .github
+          persist-credentials: false
+      - id: progress-pin
+        uses: ./.github/actions/progress-pin
+        with:
+          workflow: progress-merge.yml
       - name: Decide which pull request to consider
         id: pick
         env:
@@ -121,7 +134,8 @@ jobs:
     if: needs.resolve.outputs.pr != ''
     # Pinned to a full EpsilonEridaniProgress SHA. `progress_ref` must be the SAME SHA: it selects the
     # validator code checked out inside, and a mismatch would validate with different rules than the
-    # ones reviewed here.
+    # ones reviewed here. So it is not written here: `resolve` reads it from this `uses:` line at run
+    # time (.github/actions/progress-pin), and a Dependabot bump of the line is complete on its own.
     # `write` here and nowhere else: the called workflow narrows it again to the one job that
     # explains a refusal on the pull request, and a called workflow cannot exceed what this grants.
     permissions:
@@ -130,7 +144,7 @@ jobs:
     uses: eic/EpsilonEridaniProgress/.github/workflows/merge.yml@REPLACE_WITH_FULL_SHA
     with:
       pr: ${{ fromJSON(needs.resolve.outputs.pr) }}
-      progress_ref: REPLACE_WITH_FULL_SHA
+      progress_ref: ${{ needs.resolve.outputs.progress_ref }}
       # There is deliberately no author allowlist. Anyone may publish a progress report, including
       # from a fork: what bounds this is the shape of the diff (two generated files, one roadmap,
       # append-only log, window ending in published history), not who sent it. See

@@ -1,0 +1,44 @@
+name: progress-pins
+
+# Checks the calls of the EpsilonEridaniProgress reusable workflows (progress-merge.yml,
+# progress-announce.yml) against the workflows they call, at the commit they are pinned to.
+#
+# Those callers run from the base branch, so a Dependabot bump that breaks a call (a renamed or new
+# required input) would otherwise only fail after it merged. This runs on `pull_request`, i.e. on
+# the pull request's own copy of the files, so the bump's own pull request shows the break.
+# Read-only, no secrets: it fetches the public called workflows and parses YAML.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/progress-*.yml"
+      - ".github/actions/progress-pin/**"
+      - ".github/scripts/*progress_pins*.py"
+      - ".github/dependabot.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/progress-*.yml"
+      - ".github/actions/progress-pin/**"
+      - ".github/scripts/*progress_pins*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the EpsilonEridaniProgress calls
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet PyYAML==6.0.2
+          "$RUNNER_TEMP/venv/bin/python" .github/scripts/test_check_progress_pins.py
+          "$RUNNER_TEMP/venv/bin/python" .github/scripts/check_progress_pins.py
